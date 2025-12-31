@@ -3,6 +3,7 @@ module github.com/sikigasa/github-task-controller/backend
 go 1.25
 
 require (
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/sessions v1.4.0

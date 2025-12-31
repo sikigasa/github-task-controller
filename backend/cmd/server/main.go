@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
-	"github.com/joho/godotenv"
+	"github.com/sikigasa/github-task-controller/backend/cmd/config"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/auth"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/persistence"
@@ -33,43 +33,34 @@ func run() int {
 
 	ctx := context.Background()
 
-	// .envファイルから環境変数を読み込む
-	if err := godotenv.Load(); err != nil {
+	// 環境変数の読み込み
+	if err := config.LoadEnv(); err != nil {
 		logger.Warn("failed to load .env file, using environment variables", "error", err)
 	}
 
-	// 環境変数の読み込み
-	dbConfig := persistence.DBConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "postgres"),
-		DBName:   getEnv("DB_NAME", "todoapp"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
-	}
-
-	// OAuth設定
-	googleClientID := getEnv("GOOGLE_CLIENT_ID", "")
-	googleClientSecret := getEnv("GOOGLE_CLIENT_SECRET", "")
-	googleRedirectURL := getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/google/callback")
-	githubClientID := getEnv("GITHUB_CLIENT_ID", "")
-	githubClientSecret := getEnv("GITHUB_CLIENT_SECRET", "")
-	githubRedirectURL := getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/auth/github/callback")
-	frontendURL := getEnv("FRONTEND_URL", "http://localhost:5173")
-	sessionSecret := getEnv("SESSION_SECRET", "your-secret-key-change-in-production")
-
-	if googleClientID == "" || googleClientSecret == "" {
+	// 設定の検証
+	if config.Config.OAuth.Google.ClientID == "" || config.Config.OAuth.Google.ClientSecret == "" {
 		logger.Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set")
 		return 1
 	}
 
-	if githubClientID == "" || githubClientSecret == "" {
+	if config.Config.OAuth.Github.ClientID == "" || config.Config.OAuth.Github.ClientSecret == "" {
 		logger.Error("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
 		return 1
 	}
 
+	// データベース設定
+	dbConfig := persistence.DBConfig{
+		Host:     config.Config.Database.Host,
+		Port:     config.Config.Database.Port,
+		User:     config.Config.Database.User,
+		Password: config.Config.Database.Password,
+		DBName:   config.Config.Database.Name,
+		SSLMode:  config.Config.Database.SSLMode,
+	}
+
 	// セッションストアの初期化
-	sessionStore := sessions.NewCookieStore([]byte(sessionSecret))
+	sessionStore := sessions.NewCookieStore([]byte(config.Config.Session.Secret))
 	sessionStore.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   60 * 60 * 24 * 7, // 7日間
@@ -94,8 +85,12 @@ func run() int {
 
 	// OAuth設定の初期化
 	oauthConfig := auth.NewOAuthConfig(
-		googleClientID, googleClientSecret, googleRedirectURL,
-		githubClientID, githubClientSecret, githubRedirectURL,
+		config.Config.OAuth.Google.ClientID,
+		config.Config.OAuth.Google.ClientSecret,
+		config.Config.OAuth.Google.RedirectURL,
+		config.Config.OAuth.Github.ClientID,
+		config.Config.OAuth.Github.ClientSecret,
+		config.Config.OAuth.Github.RedirectURL,
 		logger,
 	)
 
@@ -113,7 +108,7 @@ func run() int {
 	taskUsecase := usecase.NewTaskUsecase(taskRepo, logger)
 
 	todoHandler := handler.NewTodoHandler(todoUsecase, logger)
-	authHandler := handler.NewAuthHandler(authUsecase, sessionStore, frontendURL, logger)
+	authHandler := handler.NewAuthHandler(authUsecase, sessionStore, config.Config.App.FrontendURL, logger)
 	projectHandler := handler.NewProjectHandler(projectUsecase, logger)
 	taskHandler := handler.NewTaskHandler(taskUsecase, logger)
 
@@ -124,9 +119,8 @@ func run() int {
 	httpHandler := r.Setup()
 
 	// サーバーの設定
-	port := getEnv("PORT", "8080")
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%s", port),
+		Addr:         fmt.Sprintf(":%s", config.Config.App.Port),
 		Handler:      httpHandler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -135,13 +129,13 @@ func run() int {
 
 	// サーバーの起動
 	go func() {
-		logger.Info("starting server", "port", port)
+		logger.Info("starting server", "port", config.Config.App.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("server error", "error", err)
 		}
 	}()
 
-	// グレースフルシャットダウンの設定
+	// シグナル待機
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -159,12 +153,4 @@ func run() int {
 
 	logger.Info("server exited gracefully")
 	return 0
-}
-
-// getEnv は環境変数を取得し、存在しない場合はデフォルト値を返す
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
 }

@@ -1,1 +1,1 @@
-# github-task-controller
+# task-controller

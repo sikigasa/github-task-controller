@@ -1,11 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from '@/components/Layout/Layout';
-import { ProjectList } from '@/pages/ProjectList';
-import { ProjectBoard } from '@/pages/ProjectBoard';
-import { AllTasks } from '@/pages/AllTasks';
-import { Settings } from '@/pages/Settings';
-import { Login } from '@/pages/Login';
-import { TaskProvider, ProjectProvider, AuthProvider, useAuth } from '@/contexts';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Layout } from "@/components/Layout/Layout";
+import { ProjectList } from "@/pages/ProjectList";
+import { ProjectBoard } from "@/pages/ProjectBoard";
+import { AllTasks } from "@/pages/AllTasks";
+import { Settings } from "@/pages/Settings";
+import { Login } from "@/pages/Login";
+import {
+  TaskProvider,
+  ProjectProvider,
+  AuthProvider,
+  useAuth,
+} from "@/contexts";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();

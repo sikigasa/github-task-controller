@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { Github, FileText, Save, Settings as SettingsIcon } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import { useProjects } from '@/contexts';
+import React, { useState } from "react";
+import { Github, FileText, Save, Settings as SettingsIcon } from "lucide-react";
+import { Button } from "@/components/common/Button";
+import { useProjects } from "@/contexts";
 
 export const Settings: React.FC = () => {
   const { projects } = useProjects();
-  const [defaultProjectId, setDefaultProjectId] = useState('1');
+  const [defaultProjectId, setDefaultProjectId] = useState("1");
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Integrations & Settings</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Integrations & Settings
+        </h2>
         <p className="text-muted-foreground">
           Manage your connections to external tools and application preferences.
         </p>
@@ -44,8 +46,10 @@ export const Settings: React.FC = () => {
                 onChange={(e) => setDefaultProjectId(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             </div>

@@ -1,17 +1,24 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Folder, MoreHorizontal, Plus, ChevronRight, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { CreateProjectModal } from '@/components/Project/CreateProjectModal';
-import { EditProjectModal } from '@/components/Project/EditProjectModal';
-import { Button } from '@/components/common/Button';
-import { useProjects } from '@/contexts';
-import { useModal } from '@/hooks';
-import type { Project, ProjectFormData } from '@/types';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Folder,
+  MoreHorizontal,
+  Plus,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { CreateProjectModal } from "@/components/Project/CreateProjectModal";
+import { EditProjectModal } from "@/components/Project/EditProjectModal";
+import { Button } from "@/components/common/Button";
+import { useProjects } from "@/contexts";
+import { useModal } from "@/hooks";
+import type { Project, ProjectFormData } from "@/types";
 
 export const ProjectList: React.FC = () => {
   const navigate = useNavigate();
-  const { projects, isLoading, addProject, updateProject, deleteProject } = useProjects();
+  const { projects, isLoading, addProject, updateProject, deleteProject } =
+    useProjects();
   const createModal = useModal();
   const editModal = useModal();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -71,7 +78,9 @@ export const ProjectList: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Folder className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-sm">No projects yet</p>
-            <p className="text-xs mt-1">Create your first project to get started</p>
+            <p className="text-xs mt-1">
+              Create your first project to get started
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -91,7 +100,7 @@ export const ProjectList: React.FC = () => {
                 </div>
 
                 <div className="col-span-4 text-sm text-muted-foreground">
-                  {project.description || '-'}
+                  {project.description || "-"}
                 </div>
 
                 <div className="col-span-1 flex justify-center">

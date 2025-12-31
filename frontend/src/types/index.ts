@@ -1,6 +1,6 @@
 // Task Types
-export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
-export type Priority = 'High' | 'Medium' | 'Low';
+export type TaskStatus = "To Do" | "In Progress" | "Done";
+export type Priority = "High" | "Medium" | "Low";
 
 export interface Task {
   id: string;
@@ -40,15 +40,15 @@ export interface ProjectFormData {
 // Filter Types
 export interface TaskFilters {
   statusFilter: TaskStatus[];
-  priorityFilter: Priority | 'All';
+  priorityFilter: Priority | "All";
   startDate: string;
   endDate: string;
   showCompleted: boolean;
 }
 
 // Sort Types
-export type SortKey = 'title' | 'project' | 'status' | 'due' | 'priority';
-export type SortDirection = 'asc' | 'desc';
+export type SortKey = "title" | "project" | "status" | "due" | "priority";
+export type SortDirection = "asc" | "desc";
 
 export interface SortConfig {
   key: SortKey;
@@ -56,5 +56,5 @@ export interface SortConfig {
 }
 
 // View Types
-export type ViewMode = 'list' | 'board' | 'calendar';
-export type FilterPreset = 'my-tasks-all' | 'my-tasks-nodate' | 'all-backlog';
+export type ViewMode = "list" | "board" | "calendar";
+export type FilterPreset = "my-tasks-all" | "my-tasks-nodate" | "all-backlog";

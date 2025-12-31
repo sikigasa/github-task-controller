@@ -20,6 +20,7 @@ export interface TaskFormData {
   due: string;
   project: string;
   priority: Priority;
+  status?: TaskStatus;
 }
 
 // Project Types

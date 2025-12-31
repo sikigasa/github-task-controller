@@ -1,4 +1,4 @@
-import type { Project, TaskStatus, Priority } from '@/types';
+import type { TaskStatus, Priority } from '@/types';
 
 // Task Status Configuration
 export const TASK_STATUSES: { id: TaskStatus; title: string; color: string }[] = [
@@ -27,12 +27,3 @@ export const PROJECT_COLORS = [
   { name: 'Cyan', value: 'text-cyan-500 bg-cyan-500/10' },
   { name: 'Pink', value: 'text-pink-500 bg-pink-500/10' },
 ] as const;
-
-// Default Projects (Mock Data)
-export const DEFAULT_PROJECTS: Project[] = [
-  { id: '1', name: 'Task Controller', description: 'Main development board', color: 'text-blue-500 bg-blue-500/10', taskCount: 12 },
-  { id: '2', name: 'Marketing', description: 'Q1 Outreach tasks', color: 'text-green-500 bg-green-500/10', taskCount: 5 },
-  { id: '3', name: 'Infra', description: 'Moving to Kubernetes', color: 'text-purple-500 bg-purple-500/10', taskCount: 8 },
-  { id: '4', name: 'Sales', description: 'Sales pipeline', color: 'text-orange-500 bg-orange-500/10', taskCount: 3 },
-  { id: '5', name: 'Legacy', description: 'Legacy system maintenance', color: 'text-red-500 bg-red-500/10', taskCount: 2 },
-];

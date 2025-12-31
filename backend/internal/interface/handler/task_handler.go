@@ -67,7 +67,9 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Get はIDでタスクを取得する
@@ -84,7 +86,9 @@ func (h *TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // ListByProjectID はプロジェクトIDで全タスクを取得する
@@ -105,7 +109,9 @@ func (h *TaskHandler) ListByProjectID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Update はタスク情報を更新する
@@ -134,7 +140,9 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Delete はタスクを削除する

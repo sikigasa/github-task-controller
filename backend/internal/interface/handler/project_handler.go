@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
+	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
 )
 
 // ProjectHandler はプロジェクトのHTTPハンドラー
@@ -70,10 +71,25 @@ func (h *ProjectHandler) Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	// 認証されたユーザーIDを取得
+	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		h.logger.ErrorContext(ctx, "user not authenticated")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	project, err := h.usecase.GetProject(ctx, id)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to get project", "error", err, "id", id)
 		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	// プロジェクトの所有者を確認
+	if project.UserID != authenticatedUserID {
+		h.logger.WarnContext(ctx, "unauthorized access attempt", "project_id", id, "project_owner", project.UserID, "authenticated_user", authenticatedUserID)
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -108,6 +124,14 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	// 認証されたユーザーIDを取得
+	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		h.logger.ErrorContext(ctx, "user not authenticated")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var req UpdateProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.ErrorContext(ctx, "failed to decode request", "error", err)
@@ -117,6 +141,20 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if req.Title == "" {
 		http.Error(w, "title is required", http.StatusBadRequest)
+		return
+	}
+
+	// プロジェクトを取得して所有者を確認
+	existingProject, err := h.usecase.GetProject(ctx, id)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "failed to get project", "error", err, "id", id)
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	if existingProject.UserID != authenticatedUserID {
+		h.logger.WarnContext(ctx, "unauthorized update attempt", "project_id", id, "project_owner", existingProject.UserID, "authenticated_user", authenticatedUserID)
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -136,6 +174,28 @@ func (h *ProjectHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	id := vars["id"]
+
+	// 認証されたユーザーIDを取得
+	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)
+	if !ok {
+		h.logger.ErrorContext(ctx, "user not authenticated")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// プロジェクトを取得して所有者を確認
+	project, err := h.usecase.GetProject(ctx, id)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "failed to get project", "error", err, "id", id)
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	if project.UserID != authenticatedUserID {
+		h.logger.WarnContext(ctx, "unauthorized delete attempt", "project_id", id, "project_owner", project.UserID, "authenticated_user", authenticatedUserID)
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
 
 	if err := h.usecase.DeleteProject(ctx, id); err != nil {
 		h.logger.ErrorContext(ctx, "failed to delete project", "error", err, "id", id)

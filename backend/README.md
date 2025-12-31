@@ -48,11 +48,13 @@ backend/
 ## 機能
 
 ### 認証機能
+
 - Google OAuth 2.0認証
 - セッション管理（Cookie）
 - 認証状態の確認
 
 ### TODO機能
+
 - TODO作成（Create）
 - TODO取得（Read）
   - 単一TODO取得
@@ -85,18 +87,21 @@ backend/
 ### リクエスト例
 
 #### Google認証開始
+
 ```bash
 # ブラウザで以下のURLにアクセス
 http://localhost:8080/auth/login
 ```
 
 #### ログイン中のユーザー情報取得
+
 ```bash
 curl -X GET http://localhost:8080/auth/me \
   --cookie "auth-session=..."
 ```
 
 #### TODO作成
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/todos \
   -H "Content-Type: application/json" \
@@ -108,6 +113,7 @@ curl -X POST http://localhost:8080/api/v1/todos \
 ```
 
 #### TODO更新
+
 ```bash
 curl -X PUT http://localhost:8080/api/v1/todos/{id} \
   -H "Content-Type: application/json" \
@@ -121,6 +127,7 @@ curl -X PUT http://localhost:8080/api/v1/todos/{id} \
 ### レスポンス形式
 
 成功時はTODOオブジェクトを返します：
+
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -133,6 +140,7 @@ curl -X PUT http://localhost:8080/api/v1/todos/{id} \
 ```
 
 エラー時はRFC 9457に準拠したProblem Details形式を返します：
+
 ```json
 {
   "type": "about:blank",
@@ -162,11 +170,13 @@ curl -X PUT http://localhost:8080/api/v1/todos/{id} \
 ### データベースのセットアップ
 
 1. PostgreSQLデータベースを作成：
+
 ```bash
 createdb todoapp
 ```
 
-2. 環境変数を設定：
+1. 環境変数を設定：
+
 ```bash
 cp .env.example .env
 # .envファイルを編集して以下を設定：
@@ -214,6 +224,7 @@ go bOAuth**: golang.org/x/oauth2
 ### Clean Architecture
 
 依存関係は外側から内側に向かい、ビジネスロジックは外部の詳細から独立しています：
+
 - domain層は他の層に依存しない
 - application層はdomainに依存
 - infrastructure層はdomainとapplicationに依存
@@ -222,6 +233,7 @@ go bOAuth**: golang.org/x/oauth2
 ### OAuth 2.0 with Google
 
 Google OAuthを使用したセキュアな認証フローを実装：
+
 - PKCE対応のOAuth 2.0認証フロー
 - CSRF対策（stateパラメータ）
 - セッション管理（HttpOnly Cookie）
@@ -230,6 +242,7 @@ Google OAuthを使用したセキュアな認証フローを実装：
 ### Session Management
 
 Cookie-baseのセッション管理：
+
 - HttpOnly Cookieでセキュリティを確保
 - 7日間の有効期限
 - SameSite属性によるCSRF対策
@@ -275,8 +288,8 @@ Cookie-baseのセッション管理：
 | PORT | サーバーポート | 8080 |
 | GOOGLE_CLIENT_ID | Google OAuthクライアントID | - |
 | GOOGLE_CLIENT_SECRET | Google OAuthクライアントシークレット | - |
-| GOOGLE_REDIRECT_URL | OAuth認証後のリダイレクトURL | http://localhost:8080/auth/callback |
-| FRONTEND_URL | フロントエンドURL | http://localhost:5173 |
+| GOOGLE_REDIRECT_URL | OAuth認証後のリダイレクトURL | <http://localhost:8080/auth/callback> |
+| FRONTEND_URL | フロントエンドURL | <http://localhost:5173> |
 | SESSION_SECRET | セッション暗号化用シークレット | - |
 
 ## 開発
@@ -284,6 +297,7 @@ Cookie-baseのセッション管理：
 ### コーディング規約
 
 プロジェクトルールに従ってください：
+
 - 可読性優先
 - 構造化ログの使用（log/slog）
 - コンテキスト伝播

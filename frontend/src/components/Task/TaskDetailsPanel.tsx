@@ -130,12 +130,14 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({ task, onClos
           onClick={onClose}
         />
       )}
-      <div className={cn(
-        "w-[400px] border-l border-border bg-card flex flex-col transition-all duration-300",
-        "fixed inset-y-0 right-0 z-40 shadow-2xl",
-        "xl:relative xl:z-0 xl:shadow-none xl:h-full",
-        !task && "hidden xl:flex"
-      )}>
+      <div
+        className={cn(
+          "w-[400px] border-l border-border bg-card flex flex-col transition-all duration-300",
+          "fixed inset-y-0 right-0 z-40 shadow-2xl",
+          "xl:relative xl:z-0 xl:shadow-none xl:h-full",
+          !task && "hidden xl:flex"
+        )}
+      >
         {task ? (
           <div className="flex flex-col h-full animate-in slide-in-from-right-4 duration-200">
             {/* Header */}
@@ -273,7 +275,9 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({ task, onClos
                 {/* Assignee - 読み取り専用 */}
                 <div className="flex items-center gap-3 text-sm">
                   <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-foreground">{task.assignee || 'Unassigned'}</span>
+                  <span className="text-foreground">
+                    {task.assignee || "Unassigned"}
+                  </span>
                 </div>
               </div>
 
@@ -341,7 +345,9 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({ task, onClos
             <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
               <CalendarIcon className="w-8 h-8 opacity-40" />
             </div>
-            <p className="font-medium text-lg text-foreground/80">Select a task to view details</p>
+            <p className="font-medium text-lg text-foreground/80">
+              Select a task to view details
+            </p>
           </div>
         )}
       </div>

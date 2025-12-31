@@ -96,6 +96,7 @@ func (c *IdempotencyChecker) MarkFailed(ctx context.Context, key string, err err
 ## 冪等性キーの生成戦略
 
 ### 1. デフォルト: メッセージID
+
 最もシンプルな方法。メッセージIDが一意であれば機能します。
 
 ```go
@@ -105,6 +106,7 @@ func (h *Handler) IdempotencyKey(msg Message) (string, error) {
 ```
 
 ### 2. ビジネスキー: ドメイン固有の一意性
+
 同じビジネスイベント（例: 同じユーザーの同じメールアドレスでの登録）を重複処理しない。
 
 ```go
@@ -120,6 +122,7 @@ func (h *UserCreatedHandler) IdempotencyKey(msg Message) (string, error) {
 ```
 
 ### 3. リクエストID: 外部システムからの識別子
+
 外部システムが付与したリクエストIDを使用。
 
 ```go

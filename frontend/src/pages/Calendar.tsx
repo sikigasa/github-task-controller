@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   format,
   startOfMonth,
@@ -9,11 +9,11 @@ import {
   isSameMonth,
   isSameDay,
   addMonths,
-  subMonths
-} from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { Task } from '@/types';
+  subMonths,
+} from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Task } from "@/types";
 
 interface CalendarProps {
   tasks: Task[];
@@ -37,7 +37,9 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
 
   // タスクを日付でフィルタリング
   const getTasksForDay = (day: Date) => {
-    return tasks.filter(task => task.due && isSameDay(new Date(task.due), day));
+    return tasks.filter(
+      (task) => task.due && isSameDay(new Date(task.due), day)
+    );
   };
 
   return (
@@ -46,7 +48,7 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
       <div className="shrink-0 p-4 border-b border-border flex items-center justify-between bg-card">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold capitalize">
-            {format(currentDate, 'MMMM yyyy')}
+            {format(currentDate, "MMMM yyyy")}
           </h2>
           <div className="flex items-center rounded-md border border-input bg-background/50">
             <button
@@ -78,7 +80,7 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
         <div className="min-w-[700px] flex flex-col">
           {/* Week Days Header */}
           <div className="shrink-0 grid grid-cols-7 border-b border-border bg-muted/30">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div
                 key={day}
                 className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide border-r border-border last:border-r-0"
@@ -103,23 +105,29 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
                   key={day.toString()}
                   className={cn(
                     "border-b border-r border-border p-1.5 flex flex-col gap-1 transition-colors",
-                    isCurrentMonth ? "bg-background hover:bg-accent/5" : "bg-muted/30 text-muted-foreground/50",
+                    isCurrentMonth
+                      ? "bg-background hover:bg-accent/5"
+                      : "bg-muted/30 text-muted-foreground/50",
                     (dayIdx + 1) % 7 === 0 && "border-r-0",
                     dayIdx >= days.length - 7 && "border-b-0"
                   )}
                 >
                   <div className="flex justify-between items-start">
-                    <span className={cn(
-                      "text-[10px] font-medium w-5 h-5 flex items-center justify-center rounded-full",
-                      isToday ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                      !isCurrentMonth && "text-muted-foreground/50"
-                    )}>
-                      {format(day, 'd')}
+                    <span
+                      className={cn(
+                        "text-[10px] font-medium w-5 h-5 flex items-center justify-center rounded-full",
+                        isToday
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground",
+                        !isCurrentMonth && "text-muted-foreground/50"
+                      )}
+                    >
+                      {format(day, "d")}
                     </span>
                   </div>
 
                   <div className="flex-1 flex flex-col gap-1 overflow-hidden">
-                    {dayTasks.map(task => (
+                    {dayTasks.map((task) => (
                       <div
                         key={task.id}
                         onClick={(e) => {
@@ -129,16 +137,25 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
                         className={cn(
                           "px-1.5 py-0.5 rounded-[2px] border border-border/50 text-[10px] font-medium truncate cursor-pointer",
                           "hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shadow-sm group shrink-0",
-                          isCurrentMonth ? "bg-accent/80" : "bg-muted/40 text-muted-foreground opacity-70"
+                          isCurrentMonth
+                            ? "bg-accent/80"
+                            : "bg-muted/40 text-muted-foreground opacity-70"
                         )}
                       >
-                        <div className={cn(
-                          "w-1 h-1 rounded-full inline-block mr-1 align-middle",
-                          task.priority === 'High' ? "bg-red-500" :
-                          task.priority === 'Medium' ? "bg-yellow-500" : "bg-blue-500",
-                          !isCurrentMonth && "opacity-50"
-                        )} />
-                        <span className="align-middle truncate">{task.title}</span>
+                        <div
+                          className={cn(
+                            "w-1 h-1 rounded-full inline-block mr-1 align-middle",
+                            task.priority === "High"
+                              ? "bg-red-500"
+                              : task.priority === "Medium"
+                              ? "bg-yellow-500"
+                              : "bg-blue-500",
+                            !isCurrentMonth && "opacity-50"
+                          )}
+                        />
+                        <span className="align-middle truncate">
+                          {task.title}
+                        </span>
                       </div>
                     ))}
                   </div>

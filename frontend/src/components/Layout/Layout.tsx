@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
-import { LogOut, HelpCircle, Bell, ChevronDown, Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts';
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { LogOut, HelpCircle, Bell, ChevronDown, Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,11 +19,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   // 現在のパスからactiveViewを判定
   const getActiveView = () => {
     const path = location.pathname;
-    if (path === '/') return 'my-tasks';
-    if (path === '/projects') return 'projects';
-    if (path === '/settings') return 'settings';
-    if (path.startsWith('/projects/')) return `project:${path.split('/')[2]}`;
-    return 'my-tasks';
+    if (path === "/") return "my-tasks";
+    if (path === "/projects") return "projects";
+    if (path === "/settings") return "settings";
+    if (path.startsWith("/projects/")) return `project:${path.split("/")[2]}`;
+    return "my-tasks";
   };
 
   return (
@@ -66,22 +66,38 @@ export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
                 className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-full hover:bg-muted transition-colors border border-transparent hover:border-border"
               >
                 {user?.picture ? (
-                  <img src={user.picture} alt="" className="w-7 h-7 rounded-full" />
+                  <img
+                    src={user.picture}
+                    alt=""
+                    className="w-7 h-7 rounded-full"
+                  />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                    {user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                    {user?.name?.substring(0, 2).toUpperCase() || "U"}
                   </div>
                 )}
-                <ChevronDown className={cn("w-3 h-3 text-muted-foreground transition-transform", userMenuOpen && "rotate-180")} />
+                <ChevronDown
+                  className={cn(
+                    "w-3 h-3 text-muted-foreground transition-transform",
+                    userMenuOpen && "rotate-180"
+                  )}
+                />
               </button>
 
               {userMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserMenuOpen(false)}
+                  />
                   <div className="absolute top-full right-0 mt-2 w-64 bg-popover border border-border rounded-lg shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                     <div className="px-4 py-3 border-b border-border mb-1">
-                      <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="text-sm font-medium">
+                        {user?.name || "User"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
                     </div>
                     <div className="border-t border-border mt-1 pt-1">
                       <button
@@ -102,9 +118,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
           </div>
         </header>
         <main className="flex-1 overflow-auto p-0 bg-muted/10 relative">
-          <div className="h-full p-4 md:p-6">
-            {children}
-          </div>
+          <div className="h-full p-4 md:p-6">{children}</div>
         </main>
       </div>
     </div>

@@ -1,18 +1,25 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar as CalendarIcon, SlidersHorizontal, Plus, List, Settings } from 'lucide-react';
-import { Dashboard } from './Dashboard';
-import { Calendar } from './Calendar';
-import { TaskDetailsPanel } from '@/components/Task/TaskDetailsPanel';
-import { TaskListView } from '@/components/Task/TaskListView';
-import { TaskFilterToolbar } from '@/components/Task/TaskFilterToolbar';
-import { CreateTaskModal } from '@/components/Task/CreateTaskModal';
-import { EditProjectModal } from '@/components/Project/EditProjectModal';
-import { Button } from '@/components/common/Button';
-import { useTasks, useProjects } from '@/contexts';
-import { useTaskFilters, useModal, filterTasks } from '@/hooks';
-import { cn } from '@/lib/utils';
-import type { Task, TaskStatus, ViewMode, ProjectFormData } from '@/types';
+import { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Calendar as CalendarIcon,
+  SlidersHorizontal,
+  Plus,
+  List,
+  Settings,
+} from "lucide-react";
+import { Dashboard } from "./Dashboard";
+import { Calendar } from "./Calendar";
+import { TaskDetailsPanel } from "@/components/Task/TaskDetailsPanel";
+import { TaskListView } from "@/components/Task/TaskListView";
+import { TaskFilterToolbar } from "@/components/Task/TaskFilterToolbar";
+import { CreateTaskModal } from "@/components/Task/CreateTaskModal";
+import { EditProjectModal } from "@/components/Project/EditProjectModal";
+import { Button } from "@/components/common/Button";
+import { useTasks, useProjects } from "@/contexts";
+import { useTaskFilters, useModal, filterTasks } from "@/hooks";
+import { cn } from "@/lib/utils";
+import type { Task, TaskStatus, ViewMode, ProjectFormData } from "@/types";
 
 export const ProjectBoard: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -31,10 +38,10 @@ export const ProjectBoard: React.FC = () => {
   const settingsModal = useModal();
 
   const projectTasks = useMemo(() => {
-    const projectName = project?.name || 'Task Controller';
-    const baseTasks = tasks.filter(t => t.project === projectName);
+    const projectName = project?.name || "Task Controller";
+    const baseTasks = tasks.filter((t) => t.project === projectName);
     return filterTasks(baseTasks, filters, {
-      alwaysShowCompleted: activeTab === 'board',
+      alwaysShowCompleted: activeTab === "board",
     });
   }, [tasks, project, filters, activeTab]);
 
@@ -69,11 +76,11 @@ export const ProjectBoard: React.FC = () => {
   const handleDeleteProject = async () => {
     if (!projectId) return;
     await deleteProject(projectId);
-    navigate('/projects');
+    navigate("/projects");
   };
 
   if (!projectId) {
-    navigate('/projects');
+    navigate("/projects");
     return null;
   }
 
@@ -83,16 +90,22 @@ export const ProjectBoard: React.FC = () => {
       <div className="flex flex-col border-b border-border bg-background">
         <div className="flex flex-col md:flex-row md:items-center justify-between p-4 pb-2 gap-4">
           <div className="flex items-center gap-4">
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center shadow-lg text-white font-bold text-lg flex-shrink-0",
-              project?.color ? project.color.split(' ')[0].replace('text-', 'bg-') : "bg-gradient-to-br from-blue-500 to-purple-500"
-            )}>
-              {project?.name?.substring(0, 2).toUpperCase() || 'TC'}
+            <div
+              className={cn(
+                "w-10 h-10 rounded-lg flex items-center justify-center shadow-lg text-white font-bold text-lg flex-shrink-0",
+                project?.color
+                  ? project.color.split(" ")[0].replace("text-", "bg-")
+                  : "bg-gradient-to-br from-blue-500 to-purple-500"
+              )}
+            >
+              {project?.name?.substring(0, 2).toUpperCase() || "TC"}
             </div>
             <div>
-              <h2 className="text-2xl font-bold leading-tight">{project?.name || 'Project'}</h2>
+              <h2 className="text-2xl font-bold leading-tight">
+                {project?.name || "Project"}
+              </h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                <span>{project?.description || 'No description'}</span>
+                <span>{project?.description || "No description"}</span>
               </div>
             </div>
           </div>
@@ -100,30 +113,36 @@ export const ProjectBoard: React.FC = () => {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center bg-muted p-1 rounded-lg">
               <button
-                onClick={() => setActiveTab('board')}
+                onClick={() => setActiveTab("board")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  activeTab === 'board' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  activeTab === "board"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden sm:inline">Board</span>
               </button>
               <button
-                onClick={() => setActiveTab('list')}
+                onClick={() => setActiveTab("list")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  activeTab === 'list' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  activeTab === "list"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">Backlog</span>
               </button>
               <button
-                onClick={() => setActiveTab('calendar')}
+                onClick={() => setActiveTab("calendar")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  activeTab === 'calendar' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  activeTab === "calendar"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <CalendarIcon className="w-4 h-4" />
@@ -132,7 +151,7 @@ export const ProjectBoard: React.FC = () => {
             </div>
 
             <Button
-              variant={showFilters ? 'primary' : 'secondary'}
+              variant={showFilters ? "primary" : "secondary"}
               size="sm"
               icon={<SlidersHorizontal className="w-4 h-4" />}
               onClick={() => setShowFilters(!showFilters)}
@@ -163,7 +182,7 @@ export const ProjectBoard: React.FC = () => {
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 overflow-y-auto min-h-0 relative -mx-1 px-1">
-          {activeTab === 'board' && (
+          {activeTab === "board" && (
             <Dashboard
               tasks={projectTasks}
               onStatusChange={handleStatusChange}
@@ -172,7 +191,7 @@ export const ProjectBoard: React.FC = () => {
             />
           )}
 
-          {activeTab === 'list' && (
+          {activeTab === "list" && (
             <div className="p-4 h-full">
               <TaskListView
                 tasks={projectTasks}

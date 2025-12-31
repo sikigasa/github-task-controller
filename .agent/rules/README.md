@@ -26,9 +26,11 @@
 ### コンポーネント別ルール
 
 #### HTTP Server
+
 - **[http_server_rules.md](http_server_rules.md)** - HTTPサーバーの実装ルール
 
 #### Queue Consumers
+
 - **[sqs_consumer_rules.md](sqs_consumer_rules.md)** - AWS SQSコンシューマーのルール
 - **[nats_consumer_rules.md](nats_consumer_rules.md)** - NATS JetStreamコンシューマーのルール
 - **[kafka_consumer_rules.md](kafka_consumer_rules.md)** - Apache Kafkaコンシューマーのルール
@@ -36,15 +38,18 @@
 ## 🚀 使い方
 
 ### 新規プロジェクト開始時
+
 1. [architecture_overview.md](architecture_overview.md) でアーキテクチャの全体像を把握
 2. [common_server_rules.md](common_server_rules.md) で共通ルールを確認
 3. 必要なコンポーネント（HTTP, Queue）のルールを読む
 
 ### 新機能追加時
+
 1. [architecture_overview.md](architecture_overview.md) でドメイン構成を確認
 2. 該当する層（Model, Application, Infrastructure）のルールに従って実装
 
 ### 新しいメッセージハンドラー追加時
+
 1. [message_handler_pattern.md](message_handler_pattern.md) でパターンを確認
 2. [idempotency_pattern.md](idempotency_pattern.md) で冪等性キーの戦略を決定
 

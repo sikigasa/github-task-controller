@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { Modal } from '@/components/common/Modal';
-import { Button } from '@/components/common/Button';
-import { PROJECT_COLORS } from '@/constants';
-import type { ProjectFormData } from '@/types';
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { Modal } from "@/components/common/Modal";
+import { Button } from "@/components/common/Button";
+import { PROJECT_COLORS } from "@/constants";
+import type { ProjectFormData } from "@/types";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -16,14 +16,14 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [color, setColor] = useState<string>(PROJECT_COLORS[0].value);
 
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
-      setDescription('');
+      setTitle("");
+      setDescription("");
       setColor(PROJECT_COLORS[0].value);
     }
   }, [isOpen]);
@@ -40,14 +40,17 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       <Button variant="ghost" onClick={onClose}>
         Cancel
       </Button>
-      <Button onClick={handleSubmit}>
-        Create Project
-      </Button>
+      <Button onClick={handleSubmit}>Create Project</Button>
     </>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Project" footer={footer}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Project"
+      footer={footer}
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div className="space-y-2">
@@ -95,7 +98,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                     : "border-border hover:bg-muted bg-background"
                 )}
               >
-                <span className={cn("w-3 h-3 rounded-full", c.value.split(' ')[0].replace('text-', 'bg-'))} />
+                <span
+                  className={cn(
+                    "w-3 h-3 rounded-full",
+                    c.value.split(" ")[0].replace("text-", "bg-")
+                  )}
+                />
                 {c.name}
               </button>
             ))}

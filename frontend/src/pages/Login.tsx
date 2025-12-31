@@ -1,5 +1,5 @@
-import { Github, Chrome, Command, Sparkles } from 'lucide-react';
-import { useAuth } from '@/contexts';
+import { Github, Chrome, Command, Sparkles } from "lucide-react";
+import { useAuth } from "@/contexts";
 
 export const Login: React.FC = () => {
   const { loginWithGoogle, loginWithGithub } = useAuth();
@@ -28,7 +28,9 @@ export const Login: React.FC = () => {
           <div className="relative">
             <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full" />
             <div className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300 relative z-10">
-              <span className="text-4xl font-black text-white tracking-tighter">T</span>
+              <span className="text-4xl font-black text-white tracking-tighter">
+                T
+              </span>
             </div>
           </div>
 
@@ -82,8 +84,12 @@ export const Login: React.FC = () => {
       <div className="absolute bottom-6 flex flex-col items-center gap-2 text-[10px] text-slate-600 uppercase tracking-widest">
         <div>Task Controller V1.0</div>
         <div className="flex gap-4">
-          <a href="#" className="hover:text-slate-400 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-slate-400 transition-colors">Terms</a>
+          <a href="#" className="hover:text-slate-400 transition-colors">
+            Privacy
+          </a>
+          <a href="#" className="hover:text-slate-400 transition-colors">
+            Terms
+          </a>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // yyyy-MM-dd形式をRFC3339形式に変換
 const toRFC3339 = (dateStr: string | undefined): string | undefined => {
@@ -45,25 +45,25 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
+      method: "POST",
+      credentials: "include",
     });
     if (!response.ok) {
-      throw new Error('Logout failed');
+      throw new Error("Logout failed");
     }
   },
 
   getMe: async (): Promise<User | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
       if (response.status === 401) {
         return null;
       }
       if (!response.ok) {
-        throw new Error('Failed to get user info');
+        throw new Error("Failed to get user info");
       }
       return response.json();
     } catch {
@@ -170,60 +170,63 @@ export const taskApi = {
 
 export const projectApi = {
   list: async (userId: string): Promise<Project[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/projects?user_id=${userId}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/projects?user_id=${userId}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
     if (!response.ok) {
-      throw new Error('Failed to fetch projects');
+      throw new Error("Failed to fetch projects");
     }
     return response.json();
   },
 
   get: async (id: string): Promise<Project> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/projects/${id}`, {
-      method: 'GET',
-      credentials: 'include',
+      method: "GET",
+      credentials: "include",
     });
     if (!response.ok) {
-      throw new Error('Failed to fetch project');
+      throw new Error("Failed to fetch project");
     }
     return response.json();
   },
 
   create: async (data: CreateProjectRequest): Promise<Project> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/projects`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error('Failed to create project');
+      throw new Error("Failed to create project");
     }
     return response.json();
   },
 
   update: async (id: string, data: UpdateProjectRequest): Promise<Project> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/projects/${id}`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error('Failed to update project');
+      throw new Error("Failed to update project");
     }
     return response.json();
   },
 
   delete: async (id: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/projects/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
+      method: "DELETE",
+      credentials: "include",
     });
     if (!response.ok) {
-      throw new Error('Failed to delete project');
+      throw new Error("Failed to delete project");
     }
   },
 };

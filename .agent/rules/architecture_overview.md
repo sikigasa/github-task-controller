@@ -7,6 +7,7 @@
 Clean Architectureの核心は「**依存関係の方向を制御する**」ことです。外側の層（Infrastructure）は内側の層（Application, Model）に依存しますが、逆は許されません。
 
 ### 依存関係ルール
+
 ```
 Infrastructure → Application → Model
     ↓                ↓           ↓
@@ -27,9 +28,11 @@ internal/
 ```
 
 ### `internal/model/`
+
 **役割**: ドメインエンティティ、ビジネスルール、インターフェース定義
 
 **責任**:
+
 - ビジネスエンティティの定義（User, Post, Followなど）
 - ビジネスルールの検証（例: フォロー関係の整合性）
 - インターフェースの定義（Repository, Consumer, MessageHandlerなど）
@@ -38,9 +41,11 @@ internal/
 **依存関係**: 外部ライブラリに依存しない（標準ライブラリのみ許可）
 
 ### `internal/application/`
+
 **役割**: ユースケースの実装
 
 **責任**:
+
 - ビジネスフローの実装（Create, Update, Follow, PostTweetなど）
 - トランザクション境界の定義
 - ドメインモデルの組み立て
@@ -49,9 +54,11 @@ internal/
 **依存関係**: `internal/model` のみに依存（Infrastructureには依存しない）
 
 ### `internal/infrastructure/`
+
 **役割**: 外部技術の実装
 
 **責任**:
+
 - HTTP APIハンドラー
 - データベースアクセス（Repository実装）
 - メッセージキューコンシューマー/プロデューサー
@@ -64,6 +71,7 @@ internal/
 SNSのように複数のドメインがある場合の構成例を示します。
 
 ### ドメイン構成
+
 - **User**: ユーザー管理
 - **Follow**: フォロー/フォロワー関係
 - **Post**: 投稿（ツイート）
@@ -123,6 +131,7 @@ internal/
 ### ドメイン間の依存関係の扱い
 
 #### 原則: Application層で他ドメインのServiceを注入
+
 `timeline.Service` は複数ドメインのデータを必要とするため、以下のように実装します：
 
 ```go
@@ -161,6 +170,7 @@ func (s *Service) GetHomeTimeline(ctx context.Context, userID string, limit int)
 ```
 
 #### データベースレイヤーでの集約も可能
+
 パフォーマンスが重要な場合、SQLのJOINで取得する専用クエリを用意します：
 
 ```sql
@@ -187,6 +197,7 @@ LIMIT $2;
 | **Timeline** | フォローリストと投稿の集約ロジック | 高速なJOINクエリの実行 |
 
 ### ポイント
+
 1. **1ドメイン = 1ディレクトリ**（application, infrastructure両方）
 2. **Application層は他のApplication層のServiceを注入可能**（DIで解決）
 3. **Model層にドメイン間の依存は書かない**（純粋なエンティティのみ）

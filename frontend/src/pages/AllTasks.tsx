@@ -1,16 +1,30 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, ChevronUp, ChevronDown, LayoutDashboard, List, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Calendar } from './Calendar';
-import { Dashboard } from './Dashboard';
-import { TaskDetailsPanel } from '@/components/Task/TaskDetailsPanel';
-import { TaskListView } from '@/components/Task/TaskListView';
-import { TaskFilterToolbar } from '@/components/Task/TaskFilterToolbar';
-import { CreateTaskModal } from '@/components/Task/CreateTaskModal';
-import { Button } from '@/components/common/Button';
-import { useTasks } from '@/contexts';
-import { useTaskFilters, useModal, filterTasks, sortTasks } from '@/hooks';
-import type { Task, TaskStatus, SortConfig, SortKey, FilterPreset, ViewMode } from '@/types';
+import React, { useState, useMemo } from "react";
+import {
+  Calendar as CalendarIcon,
+  ChevronUp,
+  ChevronDown,
+  LayoutDashboard,
+  List,
+  Plus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar } from "./Calendar";
+import { Dashboard } from "./Dashboard";
+import { TaskDetailsPanel } from "@/components/Task/TaskDetailsPanel";
+import { TaskListView } from "@/components/Task/TaskListView";
+import { TaskFilterToolbar } from "@/components/Task/TaskFilterToolbar";
+import { CreateTaskModal } from "@/components/Task/CreateTaskModal";
+import { Button } from "@/components/common/Button";
+import { useTasks } from "@/contexts";
+import { useTaskFilters, useModal, filterTasks, sortTasks } from "@/hooks";
+import type {
+  Task,
+  TaskStatus,
+  SortConfig,
+  SortKey,
+  FilterPreset,
+  ViewMode,
+} from "@/types";
 
 export const AllTasks: React.FC = () => {
   const { tasks, addTask, updateTaskStatus } = useTasks();
@@ -40,7 +54,7 @@ export const AllTasks: React.FC = () => {
   // フィルタリング
   const filteredTasks = useMemo(() => {
     const filtered = filterTasks(tasks, filters, {
-      alwaysShowCompleted: viewMode === 'board',
+      alwaysShowCompleted: viewMode === "board",
       preset,
     });
     return sortTasks(filtered, sortConfig);
@@ -48,13 +62,14 @@ export const AllTasks: React.FC = () => {
 
   // カレンダー用タスク（自分のタスクで期限があるもの）
   const calendarTasks = useMemo(() => {
-    return tasks.filter(t => t.due && t.assignee === 'Me');
+    return tasks.filter((t) => t.due && t.assignee === "Me");
   }, [tasks]);
 
   const handleSort = (key: SortKey) => {
-    setSortConfig(current => ({
+    setSortConfig((current) => ({
       key,
-      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+      direction:
+        current.key === key && current.direction === "asc" ? "desc" : "asc",
     }));
   };
 
@@ -69,38 +84,48 @@ export const AllTasks: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">My Tasks</h2>
-            <p className="text-muted-foreground text-sm">Manage tasks across all projects.</p>
+            <p className="text-muted-foreground text-sm">
+              Manage tasks across all projects.
+            </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button
-              variant={showCalendar ? 'primary' : 'secondary'}
+              variant={showCalendar ? "primary" : "secondary"}
               size="sm"
               icon={<CalendarIcon className="w-4 h-4" />}
               onClick={() => setShowCalendar(!showCalendar)}
             >
-              {showCalendar ? 'Hide Calendar' : 'Show Calendar'}
-              {showCalendar ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+              {showCalendar ? "Hide Calendar" : "Show Calendar"}
+              {showCalendar ? (
+                <ChevronUp className="w-3 h-3 ml-1" />
+              ) : (
+                <ChevronDown className="w-3 h-3 ml-1" />
+              )}
             </Button>
 
             <div className="h-6 w-px bg-border mx-2 hidden md:block" />
 
             <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg border border-border/50">
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'list' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                  viewMode === "list"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <List className="w-4 h-4" />
                 List
               </button>
               <button
-                onClick={() => setViewMode('board')}
+                onClick={() => setViewMode("board")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  viewMode === 'board' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                  viewMode === "board"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -108,7 +133,10 @@ export const AllTasks: React.FC = () => {
               </button>
             </div>
 
-            <Button icon={<Plus className="w-4 h-4" />} onClick={createModal.open}>
+            <Button
+              icon={<Plus className="w-4 h-4" />}
+              onClick={createModal.open}
+            >
               Add Task
             </Button>
           </div>
@@ -117,16 +145,28 @@ export const AllTasks: React.FC = () => {
         {/* Filter Bar */}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-md">
-            {(['my-tasks-all', 'my-tasks-nodate', 'all-backlog'] as FilterPreset[]).map((p) => (
+            {(
+              [
+                "my-tasks-all",
+                "my-tasks-nodate",
+                "all-backlog",
+              ] as FilterPreset[]
+            ).map((p) => (
               <button
                 key={p}
                 onClick={() => setPreset(p)}
                 className={cn(
                   "px-3 py-1 text-xs font-medium rounded-sm transition-colors",
-                  preset === p ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                  preset === p
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {p === 'my-tasks-all' ? 'All My Tasks' : p === 'my-tasks-nodate' ? 'No Date' : 'All Backlog'}
+                {p === "my-tasks-all"
+                  ? "All My Tasks"
+                  : p === "my-tasks-nodate"
+                  ? "No Date"
+                  : "All Backlog"}
               </button>
             ))}
           </div>
@@ -153,14 +193,18 @@ export const AllTasks: React.FC = () => {
             {/* View Section */}
             <div className="flex flex-col gap-3 min-h-[500px]">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                {preset === 'my-tasks-all' ? 'All My Tasks' : preset === 'my-tasks-nodate' ? 'My Backlog (No Date)' : 'All Project Backlog'}
+                {preset === "my-tasks-all"
+                  ? "All My Tasks"
+                  : preset === "my-tasks-nodate"
+                  ? "My Backlog (No Date)"
+                  : "All Project Backlog"}
                 <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
                   {filteredTasks.length}
                 </span>
               </h3>
 
               <div className="flex-1 flex flex-col overflow-hidden">
-                {viewMode === 'list' && (
+                {viewMode === "list" && (
                   <TaskListView
                     tasks={filteredTasks}
                     selectedTaskId={selectedTaskId}
@@ -170,7 +214,7 @@ export const AllTasks: React.FC = () => {
                     sortConfig={sortConfig}
                   />
                 )}
-                {viewMode === 'board' && (
+                {viewMode === "board" && (
                   <div className="h-[600px] p-4">
                     <Dashboard
                       tasks={filteredTasks}

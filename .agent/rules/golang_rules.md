@@ -46,9 +46,11 @@ Golangのコーディングにおいては、以下のルールに従ってく�
 - **Library**: `github.com/coder/websocket` を使用すること。
 - **Structure**: `Hub`（接続管理）, `Handler`（HTTPアップグレードとルーティング）, `UserHandler`（ビジネスロジック）の構成をとること。
 - **Protocol**: メッセージはJSON形式とし、`type`（コマンド/イベント名）と `payload`（データ）フィールドを持つこと。
+
   ```json
   { "type": "create_user", "payload": { ... } }
   ```
+
 - **Broadcasting**: イベントは `Hub` を通じて全クライアントにブロードキャストすること。
 - **Direct Response**: 操作の結果（成功/失敗）は、ブロードキャストの前に送信元クライアントへ直接返信すること。
 

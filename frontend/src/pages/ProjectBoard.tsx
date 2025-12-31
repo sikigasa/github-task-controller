@@ -22,8 +22,9 @@ export const ProjectBoard: React.FC = () => {
   const project = projectId ? getProjectById(projectId) : null;
 
   const [activeTab, setActiveTab] = useState<ViewMode>('board');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('To Do');
 
   const filters = useTaskFilters();
   const createModal = useModal();
@@ -36,6 +37,25 @@ export const ProjectBoard: React.FC = () => {
       alwaysShowCompleted: activeTab === 'board',
     });
   }, [tasks, project, filters, activeTab]);
+
+  // 選択中のタスクをtasks配列から取得（常に最新の状態を反映）
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return null;
+    return tasks.find(t => t.id === selectedTaskId) || null;
+  }, [tasks, selectedTaskId]);
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTaskId(task.id);
+  };
+
+  const handleClosePanel = () => {
+    setSelectedTaskId(null);
+  };
+
+  const handleAddTask = (status: TaskStatus) => {
+    setDefaultStatus(status);
+    createModal.open();
+  };
 
   const handleStatusChange = (taskId: string, newStatus: string) => {
     updateTaskStatus(taskId, newStatus as TaskStatus);
@@ -119,7 +139,7 @@ export const ProjectBoard: React.FC = () => {
             >
               <span className="hidden sm:inline">Filter</span>
             </Button>
-            <Button icon={<Plus className="w-4 h-4" />} onClick={createModal.open}>
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => handleAddTask('To Do')}>
               <span className="hidden sm:inline">Add Task</span>
             </Button>
             <Button
@@ -147,7 +167,8 @@ export const ProjectBoard: React.FC = () => {
             <Dashboard
               tasks={projectTasks}
               onStatusChange={handleStatusChange}
-              onTaskClick={setSelectedTask}
+              onTaskClick={handleTaskClick}
+              onAddTask={handleAddTask}
             />
           )}
 
@@ -155,25 +176,26 @@ export const ProjectBoard: React.FC = () => {
             <div className="p-4 h-full">
               <TaskListView
                 tasks={projectTasks}
-                selectedTaskId={selectedTask?.id}
-                onTaskClick={setSelectedTask}
+                selectedTaskId={selectedTaskId}
+                onTaskClick={handleTaskClick}
                 onStatusChange={handleStatusChange}
               />
             </div>
           )}
 
           {activeTab === 'calendar' && (
-            <Calendar tasks={projectTasks} onTaskClick={setSelectedTask} />
+            <Calendar tasks={projectTasks} onTaskClick={handleTaskClick} />
           )}
         </div>
 
-        <TaskDetailsPanel task={selectedTask} onClose={() => setSelectedTask(null)} />
+        <TaskDetailsPanel task={selectedTask} onClose={handleClosePanel} />
 
         <CreateTaskModal
           isOpen={createModal.isOpen}
           onClose={createModal.close}
           onSave={addTask}
           defaultProject={project?.name || 'Task Controller'}
+          defaultStatus={defaultStatus}
         />
 
         <EditProjectModal

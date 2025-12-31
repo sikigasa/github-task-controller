@@ -9,9 +9,10 @@ interface DashboardProps {
   tasks: Task[];
   onStatusChange?: (taskId: string, newStatus: TaskStatus) => void;
   onTaskClick?: (task: Task) => void;
+  onAddTask?: (status: TaskStatus) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ tasks, onStatusChange, onTaskClick }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ tasks, onStatusChange, onTaskClick, onAddTask }) => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   const columns = TASK_STATUSES.map(col => ({
@@ -129,7 +130,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ tasks, onStatusChange, onT
                   </div>
                 );
               })}
-              <button className="w-full py-2 flex items-center justify-center gap-2 text-muted-foreground hover:bg-muted/50 rounded-md text-sm border border-dashed border-border/50 hover:border-border transition-all">
+              <button
+                onClick={() => onAddTask?.(col.id)}
+                className="w-full py-2 flex items-center justify-center gap-2 text-muted-foreground hover:bg-muted/50 rounded-md text-sm border border-dashed border-border/50 hover:border-border transition-all"
+              >
                 <Plus className="w-4 h-4" />
                 Add Task
               </button>

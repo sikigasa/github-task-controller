@@ -16,12 +16,26 @@ export const AllTasks: React.FC = () => {
   const { tasks, addTask, updateTaskStatus } = useTasks();
   const [showCalendar, setShowCalendar] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [preset, setPreset] = useState<FilterPreset>('my-tasks-all');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'due', direction: 'asc' });
 
   const filters = useTaskFilters();
   const createModal = useModal();
+
+  // 選択中のタスクをtasks配列から取得（常に最新の状態を反映）
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return null;
+    return tasks.find(t => t.id === selectedTaskId) || null;
+  }, [tasks, selectedTaskId]);
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTaskId(task.id);
+  };
+
+  const handleClosePanel = () => {
+    setSelectedTaskId(null);
+  };
 
   // フィルタリング
   const filteredTasks = useMemo(() => {
@@ -131,7 +145,7 @@ export const AllTasks: React.FC = () => {
             {showCalendar && (
               <div className="h-[500px] flex gap-6 animate-in slide-in-from-top-4 fade-in duration-200 flex-shrink-0">
                 <div className="flex-1 min-w-0 bg-card rounded-lg border border-border shadow-sm overflow-hidden flex flex-col">
-                  <Calendar tasks={calendarTasks} onTaskClick={setSelectedTask} />
+                  <Calendar tasks={calendarTasks} onTaskClick={handleTaskClick} />
                 </div>
               </div>
             )}
@@ -149,8 +163,8 @@ export const AllTasks: React.FC = () => {
                 {viewMode === 'list' && (
                   <TaskListView
                     tasks={filteredTasks}
-                    selectedTaskId={selectedTask?.id}
-                    onTaskClick={setSelectedTask}
+                    selectedTaskId={selectedTaskId}
+                    onTaskClick={handleTaskClick}
                     onStatusChange={handleStatusChange}
                     onSort={handleSort}
                     sortConfig={sortConfig}
@@ -161,7 +175,7 @@ export const AllTasks: React.FC = () => {
                     <Dashboard
                       tasks={filteredTasks}
                       onStatusChange={handleStatusChange}
-                      onTaskClick={setSelectedTask}
+                      onTaskClick={handleTaskClick}
                     />
                   </div>
                 )}
@@ -170,7 +184,7 @@ export const AllTasks: React.FC = () => {
           </div>
         </div>
 
-        <TaskDetailsPanel task={selectedTask} onClose={() => setSelectedTask(null)} />
+        <TaskDetailsPanel task={selectedTask} onClose={handleClosePanel} />
 
         <CreateTaskModal
           isOpen={createModal.isOpen}

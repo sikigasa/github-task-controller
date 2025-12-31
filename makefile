@@ -24,12 +24,11 @@ gomigrate:
 
 # マイグレーション実行（全て適用）
 migrateup:
-	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose up
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database "$(DATABASE_URL)" -verbose up
 
 # マイグレーション実行（指定数だけ適用）: make migrateup-n n=1
 migrateup-n:
-	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose up $(n)
-
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database "$(DATABASE_URL)" -verbose up $(n)
 # マイグレーションロールバック（全て）
 migratedown:
 	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose down
@@ -40,12 +39,11 @@ migratedown-n:
 
 # マイグレーション強制バージョン設定: make migrateforce v=3
 migrateforce:
-	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' force $(v)
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database "$(DATABASE_URL)" force $(v)
 
 # マイグレーションバージョン確認
 migrateversion:
-	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' version
-
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database "$(DATABASE_URL)" version
 goupdate:
 	go get -t -u ./...
 	go mod tidy

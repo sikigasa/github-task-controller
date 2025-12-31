@@ -1,11 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Github, FileText, Save, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { useProjects } from "@/contexts";
+import { githubApi, type GithubConnectionStatus } from "@/lib/api";
 
 export const Settings: React.FC = () => {
   const { projects } = useProjects();
   const [defaultProjectId, setDefaultProjectId] = useState("1");
+  const [githubStatus, setGithubStatus] = useState<GithubConnectionStatus | null>(null);
+  const [pat, setPat] = useState("");
+  const [isSavingPat, setIsSavingPat] = useState(false);
+  const [patError, setPatError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchGithubStatus();
+  }, []);
+
+  const fetchGithubStatus = async () => {
+    try {
+      const status = await githubApi.getConnectionStatus();
+      setGithubStatus(status);
+    } catch (err) {
+      console.error("Failed to fetch GitHub status:", err);
+    }
+  };
+
+  const handleSavePat = async () => {
+    if (!pat.trim()) return;
+    setIsSavingPat(true);
+    setPatError(null);
+    try {
+      await githubApi.savePAT(pat);
+      setPat("");
+      await fetchGithubStatus();
+    } catch (err) {
+      setPatError("PATの保存に失敗しました");
+    } finally {
+      setIsSavingPat(false);
+    }
+  };
+
+  const handleDeletePat = async () => {
+    setIsSavingPat(true);
+    setPatError(null);
+    try {
+      await githubApi.deletePAT();
+      await fetchGithubStatus();
+    } catch (err) {
+      setPatError("PATの削除に失敗しました");
+    } finally {
+      setIsSavingPat(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
@@ -65,33 +111,76 @@ export const Settings: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold">GitHub</h3>
               <p className="text-sm text-muted-foreground">
-                Sync issues and pull requests as tasks.
+                GitHub Projects V2と連携してタスクを同期します。
               </p>
             </div>
           </div>
           <div className="grid gap-4 max-w-lg ml-0 md:ml-14">
-            <div className="grid gap-2">
-              <label htmlFor="gh-token" className="text-sm font-medium">
-                Personal Access Token
-              </label>
-              <input
-                id="gh-token"
-                type="password"
-                placeholder="ghp_..."
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              />
-            </div>
+            {/* 連携状態 */}
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="gh-sync"
-                className="rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                defaultChecked
-              />
-              <label htmlFor="gh-sync" className="text-sm">
-                Auto-sync assigned issues
-              </label>
+              <span className={`w-3 h-3 rounded-full ${githubStatus?.is_connected ? "bg-green-500" : "bg-gray-400"}`} />
+              <span className="text-sm">
+                {githubStatus?.is_connected 
+                  ? `GitHub連携済み (${githubStatus.username})` 
+                  : "GitHub未連携 - GitHubでログインしてください"}
+              </span>
             </div>
+
+            {githubStatus?.is_connected && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${githubStatus?.has_pat ? "bg-green-500" : "bg-yellow-500"}`} />
+                  <span className="text-sm">
+                    {githubStatus?.has_pat ? "PAT設定済み" : "PAT未設定（Projects V2 APIには必要）"}
+                  </span>
+                </div>
+
+                {patError && (
+                  <div className="p-2 bg-red-100 text-red-700 rounded text-sm">{patError}</div>
+                )}
+
+                <div className="grid gap-2">
+                  <label htmlFor="gh-token" className="text-sm font-medium">
+                    Personal Access Token
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    <a 
+                      href="https://github.com/settings/tokens/new?scopes=project,read:user" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      PATを作成（project, read:user スコープが必要）
+                    </a>
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      id="gh-token"
+                      type="password"
+                      value={pat}
+                      onChange={(e) => setPat(e.target.value)}
+                      placeholder="ghp_..."
+                      className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    />
+                    <Button 
+                      onClick={handleSavePat} 
+                      disabled={isSavingPat || !pat.trim()}
+                    >
+                      保存
+                    </Button>
+                  </div>
+                  {githubStatus?.has_pat && (
+                    <button
+                      onClick={handleDeletePat}
+                      disabled={isSavingPat}
+                      className="text-sm text-red-500 hover:underline text-left"
+                    >
+                      PATを削除
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

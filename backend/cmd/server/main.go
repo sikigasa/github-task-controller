@@ -13,6 +13,7 @@ import (
 	"github.com/sikigasa/github-task-controller/backend/cmd/config"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/auth"
+	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/github"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/persistence"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/session"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/handler"
@@ -100,15 +101,21 @@ func run() int {
 	projectUsecase := usecase.NewProjectUsecase(projectRepo, logger)
 	taskUsecase := usecase.NewTaskUsecase(taskRepo, logger)
 
+	// GitHub連携
+	githubClient := github.NewClient(logger)
+	githubService := github.NewProjectService(githubClient, logger)
+	githubUsecase := usecase.NewGithubUsecase(githubAccountRepo, projectRepo, taskRepo, githubService, logger)
+
 	todoHandler := handler.NewTodoHandler(todoUsecase, logger)
 	authHandler := handler.NewAuthHandler(authUsecase, sessionStore, config.Config.App.FrontendURL, logger)
 	projectHandler := handler.NewProjectHandler(projectUsecase, logger)
 	taskHandler := handler.NewTaskHandler(taskUsecase, logger)
+	githubHandler := handler.NewGithubHandler(githubUsecase, logger)
 
 	authMiddleware := middleware.NewAuthMiddleware(sessionStore, logger)
 
 	// ルーターのセットアップ
-	r := router.NewRouter(todoHandler, projectHandler, taskHandler, authHandler, authMiddleware, logger)
+	r := router.NewRouter(todoHandler, projectHandler, taskHandler, authHandler, githubHandler, authMiddleware, logger)
 	httpHandler := r.Setup()
 
 	// サーバーの設定

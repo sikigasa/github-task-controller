@@ -230,3 +230,100 @@ export const projectApi = {
     }
   },
 };
+
+// GitHub連携API
+export interface GithubConnectionStatus {
+  is_connected: boolean;
+  has_pat: boolean;
+  username?: string;
+}
+
+export interface GithubProject {
+  id: string;
+  number: number;
+  title: string;
+}
+
+export interface LinkProjectRequest {
+  github_owner: string;
+  github_repo?: string;
+  github_project_number: number;
+}
+
+export const githubApi = {
+  getConnectionStatus: async (): Promise<GithubConnectionStatus> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/github/status`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get GitHub connection status");
+    }
+    return response.json();
+  },
+
+  savePAT: async (pat: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/github/pat`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pat }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to save PAT");
+    }
+  },
+
+  deletePAT: async (): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/github/pat`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to delete PAT");
+    }
+  },
+
+  listProjects: async (): Promise<GithubProject[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/github/projects`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to list GitHub projects");
+    }
+    return response.json();
+  },
+
+  linkProject: async (projectId: string, data: LinkProjectRequest): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/github/link`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to link project to GitHub");
+    }
+  },
+
+  unlinkProject: async (projectId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/github/link`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to unlink project from GitHub");
+    }
+  },
+
+  syncTask: async (taskId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/tasks/${taskId}/github/sync`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to sync task to GitHub");
+    }
+  },
+};

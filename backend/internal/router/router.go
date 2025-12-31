@@ -21,6 +21,7 @@ type Router struct {
 	projectHandler *handler.ProjectHandler
 	taskHandler    *handler.TaskHandler
 	authHandler    *handler.AuthHandler
+	githubHandler  *handler.GithubHandler
 	authMiddleware *middleware.AuthMiddleware
 	logger         *slog.Logger
 	staticDir      string
@@ -32,6 +33,7 @@ func NewRouter(
 	projectHandler *handler.ProjectHandler,
 	taskHandler *handler.TaskHandler,
 	authHandler *handler.AuthHandler,
+	githubHandler *handler.GithubHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	logger *slog.Logger,
 ) *Router {
@@ -47,6 +49,7 @@ func NewRouter(
 		projectHandler: projectHandler,
 		taskHandler:    taskHandler,
 		authHandler:    authHandler,
+		githubHandler:  githubHandler,
 		authMiddleware: authMiddleware,
 		logger:         logger,
 		staticDir:      staticDir,
@@ -90,6 +93,15 @@ func (r *Router) Setup() http.Handler {
 	r.mux.Handle("GET /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Get)))
 	r.mux.Handle("PUT /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Update)))
 	r.mux.Handle("DELETE /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Delete)))
+
+	// GitHub連携エンドポイント
+	r.mux.Handle("GET /api/v1/github/status", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.GetConnectionStatus)))
+	r.mux.Handle("POST /api/v1/github/pat", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.SavePAT)))
+	r.mux.Handle("DELETE /api/v1/github/pat", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.DeletePAT)))
+	r.mux.Handle("GET /api/v1/github/projects", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.ListGithubProjects)))
+	r.mux.Handle("POST /api/v1/projects/{id}/github/link", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.LinkProject)))
+	r.mux.Handle("DELETE /api/v1/projects/{id}/github/link", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.UnlinkProject)))
+	r.mux.Handle("POST /api/v1/tasks/{id}/github/sync", r.authMiddleware.RequireAuth(http.HandlerFunc(r.githubHandler.SyncTaskToGithub)))
 
 	// SPA静的ファイル配信（本番環境用）
 	r.mux.HandleFunc("/", r.spaHandler)

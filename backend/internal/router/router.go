@@ -1,8 +1,12 @@
 package router
 
 import (
+	"io/fs"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/cors"
@@ -19,6 +23,7 @@ type Router struct {
 	authHandler    *handler.AuthHandler
 	authMiddleware *middleware.AuthMiddleware
 	logger         *slog.Logger
+	staticDir      string
 }
 
 // NewRouter は新しいRouterを作成する
@@ -30,6 +35,12 @@ func NewRouter(
 	authMiddleware *middleware.AuthMiddleware,
 	logger *slog.Logger,
 ) *Router {
+	// 静的ファイルディレクトリ（環境変数で設定可能）
+	staticDir := os.Getenv("STATIC_DIR")
+	if staticDir == "" {
+		staticDir = "../frontend/dist"
+	}
+
 	return &Router{
 		mux:            http.NewServeMux(),
 		todoHandler:    todoHandler,
@@ -38,6 +49,7 @@ func NewRouter(
 		authHandler:    authHandler,
 		authMiddleware: authMiddleware,
 		logger:         logger,
+		staticDir:      staticDir,
 	}
 }
 
@@ -78,6 +90,9 @@ func (r *Router) Setup() http.Handler {
 	r.mux.Handle("GET /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Get)))
 	r.mux.Handle("PUT /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Update)))
 	r.mux.Handle("DELETE /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Delete)))
+
+	// SPA静的ファイル配信（本番環境用）
+	r.mux.HandleFunc("/", r.spaHandler)
 
 	// CORS設定
 	// credentials: 'include' を使用する場合、AllowedOrigins に "*" は使用不可
@@ -161,4 +176,58 @@ type responseWriter struct {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+// spaHandler はSPA用の静的ファイル配信とfallbackを処理する
+func (r *Router) spaHandler(w http.ResponseWriter, req *http.Request) {
+	// 静的ファイルディレクトリが存在しない場合は404
+	if _, err := os.Stat(r.staticDir); os.IsNotExist(err) {
+		http.NotFound(w, req)
+		return
+	}
+
+	path := req.URL.Path
+	if path == "/" {
+		path = "/index.html"
+	}
+
+	// ファイルパスを構築
+	filePath := filepath.Join(r.staticDir, filepath.Clean(path))
+
+	// セキュリティチェック: staticDir外へのアクセスを防止
+	absStaticDir, _ := filepath.Abs(r.staticDir)
+	absFilePath, _ := filepath.Abs(filePath)
+	if !strings.HasPrefix(absFilePath, absStaticDir) {
+		http.NotFound(w, req)
+		return
+	}
+
+	// ファイルが存在するか確認
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		// ファイルが存在しない場合はindex.htmlを返す（SPA fallback）
+		indexPath := filepath.Join(r.staticDir, "index.html")
+		if _, err := os.Stat(indexPath); err == nil {
+			http.ServeFile(w, req, indexPath)
+			return
+		}
+		http.NotFound(w, req)
+		return
+	}
+
+	// 静的ファイルを配信
+	http.ServeFile(w, req, filePath)
+}
+
+// spaFileServer はSPA用のファイルサーバーを作成する（未使用だが参考用）
+func (r *Router) spaFileServer(fsys fs.FS) http.Handler {
+	fileServer := http.FileServer(http.FS(fsys))
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// APIパスは除外
+		if strings.HasPrefix(req.URL.Path, "/api/") || strings.HasPrefix(req.URL.Path, "/auth/") {
+			http.NotFound(w, req)
+			return
+		}
+		fileServer.ServeHTTP(w, req)
+	})
 }

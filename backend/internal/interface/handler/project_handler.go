@@ -61,7 +61,9 @@ func (h *ProjectHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(project)
+	if err := json.NewEncoder(w).Encode(project); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Get はIDでプロジェクトを取得する
@@ -78,7 +80,9 @@ func (h *ProjectHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(project)
+	if err := json.NewEncoder(w).Encode(project); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // ListByUserID はユーザーIDで全プロジェクトを取得する
@@ -99,7 +103,9 @@ func (h *ProjectHandler) ListByUserID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(projects)
+	if err := json.NewEncoder(w).Encode(projects); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Update はプロジェクト情報を更新する
@@ -128,7 +134,9 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(project)
+	if err := json.NewEncoder(w).Encode(project); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Delete はプロジェクトを削除する

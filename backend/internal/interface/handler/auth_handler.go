@@ -242,7 +242,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "logged out successfully"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"message": "logged out successfully"}); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // Me は現在ログイン中のユーザー情報を返す
@@ -278,12 +280,14 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	// レスポンスを返す
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":      user.ID,
 		"email":   user.Email,
 		"name":    user.Name,
 		"picture": user.ImageURL,
-	})
+	}); err != nil {
+		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
+	}
 }
 
 // GetSessionFromRequest はリクエストからセッション情報を取得する

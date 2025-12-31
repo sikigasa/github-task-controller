@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS task;
+DROP TABLE IF EXISTS project;
+DROP TABLE IF EXISTS google_account;
+DROP TABLE IF EXISTS github_account;
+DROP TABLE IF EXISTS users;
+
+DROP FUNCTION IF EXISTS uuid_generate_v7();

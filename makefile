@@ -13,10 +13,10 @@ gomigrate:
 	migrate create -ext sql -dir db/migrations -seq $(file)
 
 migrateup:
-	migrate --path db/migrations --database 'postgresql://postgres:postgres@localhost:5432/todoapp?sslmode=disable' -verbose up
+	migrate --path db/migrations --database 'postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)' -verbose up
 
 migratedown:
-	migrate --path db/migrations --database 'postgresql://postgres:postgres@localhost:5432/todoapp?sslmode=disable' -verbose down
+	migrate --path db/migrations --database 'postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)' -verbose down
 
 goupdate:
 	go get -t -u ./...

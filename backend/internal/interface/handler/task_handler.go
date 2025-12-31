@@ -30,6 +30,7 @@ type CreateTaskRequest struct {
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 	Status      int        `json:"status"`
+	Priority    int        `json:"priority"`
 	EndDate     *time.Time `json:"end_date,omitempty"`
 }
 
@@ -38,6 +39,7 @@ type UpdateTaskRequest struct {
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 	Status      int        `json:"status"`
+	Priority    int        `json:"priority"`
 	EndDate     *time.Time `json:"end_date,omitempty"`
 }
 
@@ -57,7 +59,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.usecase.CreateTask(ctx, req.ProjectID, req.Title, req.Description, model.TaskStatus(req.Status), req.EndDate)
+	task, err := h.usecase.CreateTask(ctx, req.ProjectID, req.Title, req.Description, model.TaskStatus(req.Status), model.TaskPriority(req.Priority), req.EndDate)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to create task", "error", err)
 		http.Error(w, "Failed to create task", http.StatusInternalServerError)
@@ -129,7 +131,7 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.usecase.UpdateTask(ctx, id, req.Title, req.Description, model.TaskStatus(req.Status), req.EndDate)
+	task, err := h.usecase.UpdateTask(ctx, id, req.Title, req.Description, model.TaskStatus(req.Status), model.TaskPriority(req.Priority), req.EndDate)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to update task", "error", err, "id", id)
 		http.Error(w, "Failed to update task", http.StatusInternalServerError)

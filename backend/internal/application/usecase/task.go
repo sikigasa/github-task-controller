@@ -26,7 +26,7 @@ func NewTaskUsecase(taskRepo repository.TaskRepository, logger *slog.Logger) *Ta
 }
 
 // CreateTask は新しいタスクを作成する
-func (u *TaskUsecase) CreateTask(ctx context.Context, projectID, title, description string, status model.TaskStatus, endDate *time.Time) (*model.Task, error) {
+func (u *TaskUsecase) CreateTask(ctx context.Context, projectID, title, description string, status model.TaskStatus, priority model.TaskPriority, endDate *time.Time) (*model.Task, error) {
 	now := time.Now()
 	task := &model.Task{
 		ID:          uuid.New().String(),
@@ -34,6 +34,7 @@ func (u *TaskUsecase) CreateTask(ctx context.Context, projectID, title, descript
 		Title:       title,
 		Description: description,
 		Status:      status,
+		Priority:    priority,
 		EndDate:     endDate,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -71,7 +72,7 @@ func (u *TaskUsecase) ListTasksByProjectID(ctx context.Context, projectID string
 }
 
 // UpdateTask はタスク情報を更新する
-func (u *TaskUsecase) UpdateTask(ctx context.Context, id, title, description string, status model.TaskStatus, endDate *time.Time) (*model.Task, error) {
+func (u *TaskUsecase) UpdateTask(ctx context.Context, id, title, description string, status model.TaskStatus, priority model.TaskPriority, endDate *time.Time) (*model.Task, error) {
 	task, err := u.taskRepo.FindByID(ctx, id)
 	if err != nil {
 		u.logger.ErrorContext(ctx, "failed to find task", "error", err, "task_id", id)
@@ -81,6 +82,7 @@ func (u *TaskUsecase) UpdateTask(ctx context.Context, id, title, description str
 	task.Title = title
 	task.Description = description
 	task.Status = status
+	task.Priority = priority
 	task.EndDate = endDate
 	task.UpdatedAt = time.Now()
 

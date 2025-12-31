@@ -26,13 +26,13 @@ func NewTaskRepository(db *sql.DB, logger *slog.Logger) repository.TaskRepositor
 
 func (r *taskRepository) Create(ctx context.Context, task *model.Task) error {
 	query := `
-		INSERT INTO task (id, project_id, title, description, status, end_date, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO task (id, project_id, title, description, status, priority, end_date, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
 		task.ID, task.ProjectID, task.Title, task.Description,
-		task.Status, task.EndDate, task.CreatedAt, task.UpdatedAt,
+		task.Status, task.Priority, task.EndDate, task.CreatedAt, task.UpdatedAt,
 	)
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to create task", "error", err)
@@ -45,7 +45,7 @@ func (r *taskRepository) Create(ctx context.Context, task *model.Task) error {
 
 func (r *taskRepository) FindByID(ctx context.Context, id string) (*model.Task, error) {
 	query := `
-		SELECT id, project_id, title, description, status, end_date, created_at, updated_at
+		SELECT id, project_id, title, description, status, priority, end_date, created_at, updated_at
 		FROM task
 		WHERE id = $1
 	`
@@ -54,7 +54,7 @@ func (r *taskRepository) FindByID(ctx context.Context, id string) (*model.Task, 
 	var endDate sql.NullTime
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&task.ID, &task.ProjectID, &task.Title, &task.Description,
-		&task.Status, &endDate, &task.CreatedAt, &task.UpdatedAt,
+		&task.Status, &task.Priority, &endDate, &task.CreatedAt, &task.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("task not found: %s", id)
@@ -73,7 +73,7 @@ func (r *taskRepository) FindByID(ctx context.Context, id string) (*model.Task, 
 
 func (r *taskRepository) FindByProjectID(ctx context.Context, projectID string) ([]*model.Task, error) {
 	query := `
-		SELECT id, project_id, title, description, status, end_date, created_at, updated_at
+		SELECT id, project_id, title, description, status, priority, end_date, created_at, updated_at
 		FROM task
 		WHERE project_id = $1
 		ORDER BY created_at DESC
@@ -92,7 +92,7 @@ func (r *taskRepository) FindByProjectID(ctx context.Context, projectID string) 
 		var endDate sql.NullTime
 		err := rows.Scan(
 			&task.ID, &task.ProjectID, &task.Title, &task.Description,
-			&task.Status, &endDate, &task.CreatedAt, &task.UpdatedAt,
+			&task.Status, &task.Priority, &endDate, &task.CreatedAt, &task.UpdatedAt,
 		)
 		if err != nil {
 			r.logger.ErrorContext(ctx, "failed to scan task", "error", err)
@@ -117,12 +117,12 @@ func (r *taskRepository) FindByProjectID(ctx context.Context, projectID string) 
 func (r *taskRepository) Update(ctx context.Context, task *model.Task) error {
 	query := `
 		UPDATE task
-		SET title = $1, description = $2, status = $3, end_date = $4, updated_at = $5
-		WHERE id = $6
+		SET title = $1, description = $2, status = $3, priority = $4, end_date = $5, updated_at = $6
+		WHERE id = $7
 	`
 
 	result, err := r.db.ExecContext(ctx, query,
-		task.Title, task.Description, task.Status, task.EndDate, time.Now(), task.ID,
+		task.Title, task.Description, task.Status, task.Priority, task.EndDate, time.Now(), task.ID,
 	)
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to update task", "error", err, "task_id", task.ID)

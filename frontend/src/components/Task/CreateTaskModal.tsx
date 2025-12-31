@@ -12,6 +12,7 @@ interface CreateTaskModalProps {
   onClose: () => void;
   onSave: (task: TaskFormData) => void;
   defaultProject?: string;
+  defaultStatus?: string;
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
@@ -19,6 +20,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onClose,
   onSave,
   defaultProject = 'Task Controller',
+  defaultStatus = 'To Do',
 }) => {
   const { projects } = useProjects();
   const [title, setTitle] = useState('');
@@ -40,7 +42,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave({ title, description, due, project, priority });
+    onSave({ title, description, due, project, priority, status: defaultStatus as TaskFormData['status'] });
     onClose();
   };
 

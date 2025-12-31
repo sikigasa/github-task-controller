@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FolderKanban,
   CheckSquare,
@@ -15,18 +16,17 @@ import { useProjects } from '@/contexts';
 
 interface SidebarProps {
   activeView: string;
-  onNavigate: (view: string) => void;
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeView,
-  onNavigate,
   mobileOpen = false,
   setMobileOpen,
 }) => {
   const { projects } = useProjects();
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
 
@@ -39,6 +39,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    handleMobileClick();
+  };
+
   return (
     <aside className={cn(
       "border-r border-border bg-card h-full flex flex-col transition-all duration-300",
@@ -46,18 +51,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       mobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full shadow-none",
       isCollapsed ? "md:w-16" : "md:w-64"
     )}>
-      {/* Header */}
       <div className={cn(
         "flex items-center p-4 h-14 border-b border-border/50 mb-2",
         isCollapsed ? "justify-center" : "justify-between"
       )}>
         {(!isCollapsed || mobileOpen) && (
-          <div className="flex items-center gap-2 overflow-hidden">
+          <Link to="/" className="flex items-center gap-2 overflow-hidden">
             <div className="w-7 h-7 bg-black dark:bg-white rounded-md flex-shrink-0 flex items-center justify-center shadow-sm">
               <span className="font-bold text-white dark:text-black">T</span>
             </div>
             <span className="font-bold text-lg tracking-tight truncate">TaskCtl</span>
-          </div>
+          </Link>
         )}
 
         <button
@@ -84,9 +88,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </p>
         )}
 
-        {/* My Tasks */}
         <button
-          onClick={() => { onNavigate('my-tasks'); handleMobileClick(); }}
+          onClick={() => handleNavigate('/')}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors group",
             activeView === 'my-tasks'
@@ -100,12 +103,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {(!isCollapsed || mobileOpen) && <span>My Tasks</span>}
         </button>
 
-        {/* Projects Group */}
         <div>
           <button
             onClick={() => {
               if (isCollapsed && !mobileOpen) {
-                onNavigate('projects');
+                handleNavigate('/projects');
               } else {
                 setIsProjectsExpanded(!isProjectsExpanded);
               }
@@ -131,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {(!isCollapsed || mobileOpen) && isProjectsExpanded && (
             <div className="mt-1 ml-4 border-l border-border/50 pl-2 space-y-1">
               <button
-                onClick={() => { onNavigate('projects'); handleMobileClick(); }}
+                onClick={() => handleNavigate('/projects')}
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
                   activeView === 'projects'
@@ -147,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <button
                     key={project.id}
-                    onClick={() => { onNavigate(`project:${project.id}`); handleMobileClick(); }}
+                    onClick={() => handleNavigate(`/projects/${project.id}`)}
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors group",
                       isActive
@@ -168,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={cn("mt-auto px-3 pb-4", isCollapsed && "md:px-2")}>
         <div className={cn("border-t border-border pt-4", isCollapsed && "md:border-t-0 md:pt-2")}>
           <button
-            onClick={() => { onNavigate('settings'); handleMobileClick(); }}
+            onClick={() => handleNavigate('/settings')}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors",
               activeView === 'settings' && "bg-secondary text-secondary-foreground",

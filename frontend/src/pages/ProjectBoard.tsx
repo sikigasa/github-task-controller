@@ -1,26 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, Calendar as CalendarIcon, SlidersHorizontal, Plus, List } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Calendar as CalendarIcon, SlidersHorizontal, Plus, List, Settings } from 'lucide-react';
 import { Dashboard } from './Dashboard';
 import { Calendar } from './Calendar';
 import { TaskDetailsPanel } from '@/components/Task/TaskDetailsPanel';
 import { TaskListView } from '@/components/Task/TaskListView';
 import { TaskFilterToolbar } from '@/components/Task/TaskFilterToolbar';
 import { CreateTaskModal } from '@/components/Task/CreateTaskModal';
+import { EditProjectModal } from '@/components/Project/EditProjectModal';
 import { Button } from '@/components/common/Button';
-import { useTasks } from '@/contexts';
-import { useProjects } from '@/contexts';
+import { useTasks, useProjects } from '@/contexts';
 import { useTaskFilters, useModal, filterTasks } from '@/hooks';
 import { cn } from '@/lib/utils';
-import type { Task, TaskStatus, ViewMode } from '@/types';
+import type { Task, TaskStatus, ViewMode, ProjectFormData } from '@/types';
 
-interface ProjectBoardProps {
-  projectId: string;
-}
-
-export const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
+export const ProjectBoard: React.FC = () => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const { tasks, addTask, updateTaskStatus } = useTasks();
-  const { getProjectById } = useProjects();
-  const project = getProjectById(projectId);
+  const { getProjectById, updateProject, deleteProject } = useProjects();
+  const project = projectId ? getProjectById(projectId) : null;
 
   const [activeTab, setActiveTab] = useState<ViewMode>('board');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -28,8 +27,8 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
 
   const filters = useTaskFilters();
   const createModal = useModal();
+  const settingsModal = useModal();
 
-  // プロジェクトのタスクをフィルタリング
   const projectTasks = useMemo(() => {
     const projectName = project?.name || 'Task Controller';
     const baseTasks = tasks.filter(t => t.project === projectName);
@@ -42,21 +41,38 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
     updateTaskStatus(taskId, newStatus as TaskStatus);
   };
 
+  const handleUpdateProject = async (data: ProjectFormData) => {
+    if (!projectId) return;
+    await updateProject(projectId, data);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+    await deleteProject(projectId);
+    navigate('/projects');
+  };
+
+  if (!projectId) {
+    navigate('/projects');
+    return null;
+  }
+
   return (
     <div className="h-full flex flex-col">
       {/* Project Header */}
       <div className="flex flex-col border-b border-border bg-background">
         <div className="flex flex-col md:flex-row md:items-center justify-between p-4 pb-2 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg text-white font-bold text-lg flex-shrink-0">
+            <div className={cn(
+              "w-10 h-10 rounded-lg flex items-center justify-center shadow-lg text-white font-bold text-lg flex-shrink-0",
+              project?.color ? project.color.split(' ')[0].replace('text-', 'bg-') : "bg-gradient-to-br from-blue-500 to-purple-500"
+            )}>
               {project?.name?.substring(0, 2).toUpperCase() || 'TC'}
             </div>
             <div>
-              <h2 className="text-2xl font-bold leading-tight">{project?.name || 'Task Controller'}</h2>
+              <h2 className="text-2xl font-bold leading-tight">{project?.name || 'Project'}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                <span>Public Project</span>
-                <span className="w-1 h-1 bg-muted-foreground rounded-full hidden md:block" />
-                <span>Project ID: {projectId}</span>
+                <span>{project?.description || 'No description'}</span>
               </div>
             </div>
           </div>
@@ -106,6 +122,14 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
             <Button icon={<Plus className="w-4 h-4" />} onClick={createModal.open}>
               <span className="hidden sm:inline">Add Task</span>
             </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Settings className="w-4 h-4" />}
+              onClick={settingsModal.open}
+            >
+              <span className="hidden sm:inline">Settings</span>
+            </Button>
           </div>
         </div>
 
@@ -150,6 +174,14 @@ export const ProjectBoard: React.FC<ProjectBoardProps> = ({ projectId }) => {
           onClose={createModal.close}
           onSave={addTask}
           defaultProject={project?.name || 'Task Controller'}
+        />
+
+        <EditProjectModal
+          isOpen={settingsModal.isOpen}
+          onClose={settingsModal.close}
+          onSave={handleUpdateProject}
+          onDelete={handleDeleteProject}
+          project={project || null}
         />
       </div>
     </div>

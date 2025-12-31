@@ -1,18 +1,45 @@
-import React from 'react';
-import { Folder, MoreHorizontal, Plus, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Folder, MoreHorizontal, Plus, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CreateProjectModal } from '@/components/Project/CreateProjectModal';
+import { EditProjectModal } from '@/components/Project/EditProjectModal';
 import { Button } from '@/components/common/Button';
 import { useProjects } from '@/contexts';
 import { useModal } from '@/hooks';
+import type { Project, ProjectFormData } from '@/types';
 
-interface ProjectListProps {
-  onSelectProject: (id: string) => void;
-}
-
-export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => {
-  const { projects, addProject } = useProjects();
+export const ProjectList: React.FC = () => {
+  const navigate = useNavigate();
+  const { projects, isLoading, addProject, updateProject, deleteProject } = useProjects();
   const createModal = useModal();
+  const editModal = useModal();
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  const handleCreateProject = async (data: ProjectFormData) => {
+    await addProject(data);
+    createModal.close();
+  };
+
+  const handleEditClick = (e: React.MouseEvent, project: Project) => {
+    e.stopPropagation();
+    setSelectedProject(project);
+    editModal.open();
+  };
+
+  const handleUpdateProject = async (data: ProjectFormData) => {
+    if (!selectedProject) return;
+    await updateProject(selectedProject.id, data);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!selectedProject) return;
+    await deleteProject(selectedProject.id);
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
+  };
 
   return (
     <div className="max-w-5xl mx-auto py-8">
@@ -35,55 +62,77 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
           <div className="col-span-1 text-center">Tasks</div>
           <div className="col-span-1" />
         </div>
-        <div className="divide-y divide-border">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              onClick={() => onSelectProject(project.id)}
-              className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/30 transition-colors cursor-pointer group"
-            >
-              <div className="col-span-6 flex items-center gap-4">
-                <div className={cn("p-2 rounded-lg", project.color)}>
-                  <Folder className="w-5 h-5" />
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Folder className="w-12 h-12 mb-4 opacity-50" />
+            <p className="text-sm">No projects yet</p>
+            <p className="text-xs mt-1">Create your first project to get started</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                onClick={() => handleProjectClick(project.id)}
+                className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/30 transition-colors cursor-pointer group"
+              >
+                <div className="col-span-6 flex items-center gap-4">
+                  <div className={cn("p-2 rounded-lg", project.color)}>
+                    <Folder className="w-5 h-5" />
+                  </div>
+                  <span className="font-semibold text-sm group-hover:text-primary transition-colors">
+                    {project.name}
+                  </span>
                 </div>
-                <span className="font-semibold text-sm group-hover:text-primary transition-colors">
-                  {project.name}
-                </span>
-              </div>
 
-              <div className="col-span-4 text-sm text-muted-foreground">
-                {project.description}
-              </div>
+                <div className="col-span-4 text-sm text-muted-foreground">
+                  {project.description || '-'}
+                </div>
 
-              <div className="col-span-1 flex justify-center">
-                <span className="bg-muted px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground">
-                  {project.taskCount || 0}
-                </span>
-              </div>
+                <div className="col-span-1 flex justify-center">
+                  <span className="bg-muted px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground">
+                    {project.taskCount || 0}
+                  </span>
+                </div>
 
-              <div className="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-background rounded-md border border-transparent hover:border-border transition-all"
-                  aria-label="More options"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-                <button
-                  className="p-1.5 text-primary hover:bg-primary/10 rounded-md transition-colors"
-                  aria-label="Open project"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                <div className="col-span-1 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => handleEditClick(e, project)}
+                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-background rounded-md border border-transparent hover:border-border transition-all"
+                    aria-label="Edit project"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="p-1.5 text-primary hover:bg-primary/10 rounded-md transition-colors"
+                    aria-label="Open project"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <CreateProjectModal
         isOpen={createModal.isOpen}
         onClose={createModal.close}
-        onSave={addProject}
+        onSave={handleCreateProject}
+      />
+
+      <EditProjectModal
+        isOpen={editModal.isOpen}
+        onClose={editModal.close}
+        onSave={handleUpdateProject}
+        onDelete={handleDeleteProject}
+        project={selectedProject}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout/Layout';
 import { ProjectList } from '@/pages/ProjectList';
 import { ProjectBoard } from '@/pages/ProjectBoard';
@@ -7,11 +7,9 @@ import { Settings } from '@/pages/Settings';
 import { Login } from '@/pages/Login';
 import { TaskProvider, ProjectProvider, AuthProvider, useAuth } from '@/contexts';
 
-function AppContent() {
-  const { isAuthenticated, isLoading, logout } = useAuth();
-  const [view, setView] = useState('my-tasks');
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // ローディング中
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -20,44 +18,86 @@ function AppContent() {
     );
   }
 
-  // 未認証
   if (!isAuthenticated) {
-    return <Login />;
+    return <Navigate to="/login" replace />;
   }
 
-  const renderContent = () => {
-    if (view === 'projects') {
-      return <ProjectList onSelectProject={(id) => setView(`project:${id}`)} />;
-    }
-    if (view === 'my-tasks') {
-      return <AllTasks />;
-    }
-    if (view === 'settings') {
-      return <Settings />;
-    }
-    if (view.startsWith('project:')) {
-      const projectId = view.split(':')[1];
-      return <ProjectBoard projectId={projectId} />;
-    }
-    return <ProjectList onSelectProject={(id) => setView(`project:${id}`)} />;
-  };
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const { isAuthenticated, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
-    <Layout activeView={view} onNavigate={setView} onLogout={logout}>
-      {renderContent()}
-    </Layout>
+    <Routes>
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout onLogout={logout}>
+              <AllTasks />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Layout onLogout={logout}>
+              <ProjectList />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectId"
+        element={
+          <ProtectedRoute>
+            <Layout onLogout={logout}>
+              <ProjectBoard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Layout onLogout={logout}>
+              <Settings />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <ProjectProvider>
-        <TaskProvider>
-          <AppContent />
-        </TaskProvider>
-      </ProjectProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ProjectProvider>
+          <TaskProvider>
+            <AppRoutes />
+          </TaskProvider>
+        </ProjectProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

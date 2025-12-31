@@ -106,7 +106,9 @@ func (r *Router) Setup() http.Handler {
 func (r *Router) healthCheck(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"ok"}`))
+	if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
+		r.logger.ErrorContext(req.Context(), "failed to write health check response", "error", err)
+	}
 }
 
 // loggingMiddleware はリクエストをログに記録するミドルウェア
@@ -143,7 +145,9 @@ func (r *Router) recoveryMiddleware(next http.Handler) http.Handler {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(`{"type":"about:blank","title":"Internal Server Error","status":500,"detail":"予期しないエラーが発生しました"}`))
+				if _, writeErr := w.Write([]byte(`{"type":"about:blank","title":"Internal Server Error","status":500,"detail":"予期しないエラーが発生しました"}`)); writeErr != nil {
+					r.logger.ErrorContext(req.Context(), "failed to write error response", "error", writeErr)
+				}
 			}
 		}()
 

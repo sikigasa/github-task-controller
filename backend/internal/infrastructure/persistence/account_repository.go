@@ -30,9 +30,16 @@ func (r *googleAccountRepository) Create(ctx context.Context, account *model.Goo
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
+	// expires_at を Unix timestamp に変換
+	var expiresAt *int64
+	if account.ExpiresAt != nil {
+		ts := account.ExpiresAt.Unix()
+		expiresAt = &ts
+	}
+
 	_, err := r.db.ExecContext(ctx, query,
 		account.UserID, account.Provider, account.ProviderAccountID,
-		account.AccessToken, account.RefreshToken, account.ExpiresAt,
+		account.AccessToken, account.RefreshToken, expiresAt,
 		account.CreatedAt, account.UpdatedAt,
 	)
 	if err != nil {
@@ -52,9 +59,10 @@ func (r *googleAccountRepository) FindByProviderAccountID(ctx context.Context, p
 	`
 
 	var account model.GoogleAccount
+	var expiresAt sql.NullInt64
 	err := r.db.QueryRowContext(ctx, query, provider, providerAccountID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &account.ExpiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -63,6 +71,11 @@ func (r *googleAccountRepository) FindByProviderAccountID(ctx context.Context, p
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to find google account", "error", err)
 		return nil, fmt.Errorf("failed to find google account: %w", err)
+	}
+
+	if expiresAt.Valid {
+		t := time.Unix(expiresAt.Int64, 0)
+		account.ExpiresAt = &t
 	}
 
 	return &account, nil
@@ -76,9 +89,10 @@ func (r *googleAccountRepository) FindByUserID(ctx context.Context, userID strin
 	`
 
 	var account model.GoogleAccount
+	var expiresAt sql.NullInt64
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &account.ExpiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -87,6 +101,11 @@ func (r *googleAccountRepository) FindByUserID(ctx context.Context, userID strin
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to find google account by user_id", "error", err)
 		return nil, fmt.Errorf("failed to find google account: %w", err)
+	}
+
+	if expiresAt.Valid {
+		t := time.Unix(expiresAt.Int64, 0)
+		account.ExpiresAt = &t
 	}
 
 	return &account, nil
@@ -99,8 +118,14 @@ func (r *googleAccountRepository) Update(ctx context.Context, account *model.Goo
 		WHERE provider = $5 AND provider_account_id = $6
 	`
 
+	var expiresAt *int64
+	if account.ExpiresAt != nil {
+		ts := account.ExpiresAt.Unix()
+		expiresAt = &ts
+	}
+
 	result, err := r.db.ExecContext(ctx, query,
-		account.AccessToken, account.RefreshToken, account.ExpiresAt, time.Now(),
+		account.AccessToken, account.RefreshToken, expiresAt, time.Now(),
 		account.Provider, account.ProviderAccountID,
 	)
 	if err != nil {
@@ -160,9 +185,15 @@ func (r *githubAccountRepository) Create(ctx context.Context, account *model.Git
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 
+	var expiresAt *int64
+	if account.ExpiresAt != nil {
+		ts := account.ExpiresAt.Unix()
+		expiresAt = &ts
+	}
+
 	_, err := r.db.ExecContext(ctx, query,
 		account.UserID, account.Provider, account.ProviderAccountID,
-		account.AccessToken, account.RefreshToken, account.ExpiresAt,
+		account.AccessToken, account.RefreshToken, expiresAt,
 		account.CreatedAt, account.UpdatedAt,
 	)
 	if err != nil {
@@ -182,9 +213,10 @@ func (r *githubAccountRepository) FindByProviderAccountID(ctx context.Context, p
 	`
 
 	var account model.GithubAccount
+	var expiresAt sql.NullInt64
 	err := r.db.QueryRowContext(ctx, query, provider, providerAccountID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &account.ExpiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -193,6 +225,11 @@ func (r *githubAccountRepository) FindByProviderAccountID(ctx context.Context, p
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to find github account", "error", err)
 		return nil, fmt.Errorf("failed to find github account: %w", err)
+	}
+
+	if expiresAt.Valid {
+		t := time.Unix(expiresAt.Int64, 0)
+		account.ExpiresAt = &t
 	}
 
 	return &account, nil
@@ -206,9 +243,10 @@ func (r *githubAccountRepository) FindByUserID(ctx context.Context, userID strin
 	`
 
 	var account model.GithubAccount
+	var expiresAt sql.NullInt64
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &account.ExpiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -217,6 +255,11 @@ func (r *githubAccountRepository) FindByUserID(ctx context.Context, userID strin
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to find github account by user_id", "error", err)
 		return nil, fmt.Errorf("failed to find github account: %w", err)
+	}
+
+	if expiresAt.Valid {
+		t := time.Unix(expiresAt.Int64, 0)
+		account.ExpiresAt = &t
 	}
 
 	return &account, nil
@@ -229,8 +272,14 @@ func (r *githubAccountRepository) Update(ctx context.Context, account *model.Git
 		WHERE provider = $5 AND provider_account_id = $6
 	`
 
+	var expiresAt *int64
+	if account.ExpiresAt != nil {
+		ts := account.ExpiresAt.Unix()
+		expiresAt = &ts
+	}
+
 	result, err := r.db.ExecContext(ctx, query,
-		account.AccessToken, account.RefreshToken, account.ExpiresAt, time.Now(),
+		account.AccessToken, account.RefreshToken, expiresAt, time.Now(),
 		account.Provider, account.ProviderAccountID,
 	)
 	if err != nil {

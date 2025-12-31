@@ -8,11 +8,13 @@ import (
 // LoadEnv は環境変数を読み取りConfig(グローバル変数)に代入する関数
 // 引数にファイルを指定することによって、特定のenvファイルを読み取る
 func LoadEnv(envfile ...string) error {
-	if len(envfile) > 0 {
-		if err := godotenv.Load(envfile...); err != nil {
-			return err
-		}
+	// 引数が指定されていない場合は .env を読み込む
+	if len(envfile) == 0 {
+		envfile = []string{".env"}
 	}
+
+	// .envファイルの読み込み（存在しない場合はエラーを返さない）
+	_ = godotenv.Load(envfile...)
 
 	config := config{}
 

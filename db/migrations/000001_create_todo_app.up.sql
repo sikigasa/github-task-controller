@@ -1,4 +1,22 @@
-CREATE EXTENSION IF NOT EXISTS pg_uuidv7;
+-- UUID v7を生成する関数を定義
+CREATE OR REPLACE FUNCTION uuid_generate_v7()
+RETURNS uuid
+AS $$
+DECLARE
+  unix_time_ms bytea;
+  uuid_bytes bytea;
+BEGIN
+  -- 現在時刻をミリ秒で取得
+  unix_time_ms := decode(lpad(to_hex(floor(extract(epoch from clock_timestamp()) * 1000)::bigint), 12, '0'), 'hex');
+  -- ランダムなバイトを生成
+  uuid_bytes := unix_time_ms || gen_random_bytes(10);
+  -- UUID v7のビット設定 (version 7, variant 1)
+  uuid_bytes := set_byte(uuid_bytes, 6, (get_byte(uuid_bytes, 6) & 15) | 112);
+  uuid_bytes := set_byte(uuid_bytes, 8, (get_byte(uuid_bytes, 8) & 63) | 128);
+  RETURN encode(uuid_bytes, 'hex')::uuid;
+END
+$$ LANGUAGE plpgsql VOLATILE;
+
 
 CREATE TABLE users (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v7(),

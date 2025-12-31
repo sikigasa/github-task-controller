@@ -4,4 +4,4 @@ DROP TABLE IF EXISTS google_account;
 DROP TABLE IF EXISTS github_account;
 DROP TABLE IF EXISTS users;
 
-DROP EXTENSION IF EXISTS pg_uuidv7;
+DROP FUNCTION IF EXISTS uuid_generate_v7();

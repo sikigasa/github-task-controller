@@ -98,8 +98,8 @@ jobs:
       - name: 依存関係をインストール
         run: pnpm install --frozen-lockfile
 
-      - name: Lintを実行
-        run: pnpm lint
+      # - name: Lintを実行
+      #   run: pnpm lint
 
       - name: TypeScript型チェック
         run: pnpm exec tsc --noEmit

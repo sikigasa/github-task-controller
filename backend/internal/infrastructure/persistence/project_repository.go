@@ -26,12 +26,13 @@ func NewProjectRepository(db *sql.DB, logger *slog.Logger) repository.ProjectRep
 
 func (r *projectRepository) Create(ctx context.Context, project *model.Project) error {
 	query := `
-		INSERT INTO project (id, user_id, title, description, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO project (id, user_id, title, description, github_owner, github_repo, github_project_number, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
 		project.ID, project.UserID, project.Title, project.Description,
+		project.GithubOwner, project.GithubRepo, project.GithubProjectNumber,
 		project.CreatedAt, project.UpdatedAt,
 	)
 	if err != nil {
@@ -45,14 +46,17 @@ func (r *projectRepository) Create(ctx context.Context, project *model.Project) 
 
 func (r *projectRepository) FindByID(ctx context.Context, id string) (*model.Project, error) {
 	query := `
-		SELECT id, user_id, title, description, created_at, updated_at
+		SELECT id, user_id, title, description, github_owner, github_repo, github_project_number, created_at, updated_at
 		FROM project
 		WHERE id = $1
 	`
 
 	var project model.Project
+	var githubOwner, githubRepo sql.NullString
+	var githubProjectNumber sql.NullInt32
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&project.ID, &project.UserID, &project.Title, &project.Description,
+		&githubOwner, &githubRepo, &githubProjectNumber,
 		&project.CreatedAt, &project.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -63,12 +67,23 @@ func (r *projectRepository) FindByID(ctx context.Context, id string) (*model.Pro
 		return nil, fmt.Errorf("failed to find project by id: %w", err)
 	}
 
+	if githubOwner.Valid {
+		project.GithubOwner = &githubOwner.String
+	}
+	if githubRepo.Valid {
+		project.GithubRepo = &githubRepo.String
+	}
+	if githubProjectNumber.Valid {
+		num := int(githubProjectNumber.Int32)
+		project.GithubProjectNumber = &num
+	}
+
 	return &project, nil
 }
 
 func (r *projectRepository) FindByUserID(ctx context.Context, userID string) ([]*model.Project, error) {
 	query := `
-		SELECT id, user_id, title, description, created_at, updated_at
+		SELECT id, user_id, title, description, github_owner, github_repo, github_project_number, created_at, updated_at
 		FROM project
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -84,13 +99,26 @@ func (r *projectRepository) FindByUserID(ctx context.Context, userID string) ([]
 	var projects []*model.Project
 	for rows.Next() {
 		var project model.Project
+		var githubOwner, githubRepo sql.NullString
+		var githubProjectNumber sql.NullInt32
 		err := rows.Scan(
 			&project.ID, &project.UserID, &project.Title, &project.Description,
+			&githubOwner, &githubRepo, &githubProjectNumber,
 			&project.CreatedAt, &project.UpdatedAt,
 		)
 		if err != nil {
 			r.logger.ErrorContext(ctx, "failed to scan project", "error", err)
 			return nil, fmt.Errorf("failed to scan project: %w", err)
+		}
+		if githubOwner.Valid {
+			project.GithubOwner = &githubOwner.String
+		}
+		if githubRepo.Valid {
+			project.GithubRepo = &githubRepo.String
+		}
+		if githubProjectNumber.Valid {
+			num := int(githubProjectNumber.Int32)
+			project.GithubProjectNumber = &num
 		}
 		projects = append(projects, &project)
 	}
@@ -106,12 +134,14 @@ func (r *projectRepository) FindByUserID(ctx context.Context, userID string) ([]
 func (r *projectRepository) Update(ctx context.Context, project *model.Project) error {
 	query := `
 		UPDATE project
-		SET title = $1, description = $2, updated_at = $3
-		WHERE id = $4
+		SET title = $1, description = $2, github_owner = $3, github_repo = $4, github_project_number = $5, updated_at = $6
+		WHERE id = $7
 	`
 
 	result, err := r.db.ExecContext(ctx, query,
-		project.Title, project.Description, time.Now(), project.ID,
+		project.Title, project.Description,
+		project.GithubOwner, project.GithubRepo, project.GithubProjectNumber,
+		time.Now(), project.ID,
 	)
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to update project", "error", err, "project_id", project.ID)

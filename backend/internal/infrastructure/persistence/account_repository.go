@@ -181,8 +181,8 @@ func NewGithubAccountRepository(db *sql.DB, logger *slog.Logger) repository.Gith
 
 func (r *githubAccountRepository) Create(ctx context.Context, account *model.GithubAccount) error {
 	query := `
-		INSERT INTO github_account (user_id, provider, provider_account_id, access_token, refresh_token, expires_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO github_account (user_id, provider, provider_account_id, access_token, refresh_token, expires_at, pat_encrypted, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	var expiresAt *int64
@@ -193,7 +193,7 @@ func (r *githubAccountRepository) Create(ctx context.Context, account *model.Git
 
 	_, err := r.db.ExecContext(ctx, query,
 		account.UserID, account.Provider, account.ProviderAccountID,
-		account.AccessToken, account.RefreshToken, expiresAt,
+		account.AccessToken, account.RefreshToken, expiresAt, account.PATEncrypted,
 		account.CreatedAt, account.UpdatedAt,
 	)
 	if err != nil {
@@ -207,16 +207,17 @@ func (r *githubAccountRepository) Create(ctx context.Context, account *model.Git
 
 func (r *githubAccountRepository) FindByProviderAccountID(ctx context.Context, provider, providerAccountID string) (*model.GithubAccount, error) {
 	query := `
-		SELECT user_id, provider, provider_account_id, access_token, refresh_token, expires_at, created_at, updated_at
+		SELECT user_id, provider, provider_account_id, access_token, refresh_token, expires_at, pat_encrypted, created_at, updated_at
 		FROM github_account
 		WHERE provider = $1 AND provider_account_id = $2
 	`
 
 	var account model.GithubAccount
 	var expiresAt sql.NullInt64
+	var patEncrypted sql.NullString
 	err := r.db.QueryRowContext(ctx, query, provider, providerAccountID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &expiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt, &patEncrypted,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -231,26 +232,30 @@ func (r *githubAccountRepository) FindByProviderAccountID(ctx context.Context, p
 		t := time.Unix(expiresAt.Int64, 0)
 		account.ExpiresAt = &t
 	}
+	if patEncrypted.Valid {
+		account.PATEncrypted = &patEncrypted.String
+	}
 
 	return &account, nil
 }
 
 func (r *githubAccountRepository) FindByUserID(ctx context.Context, userID string) (*model.GithubAccount, error) {
 	query := `
-		SELECT user_id, provider, provider_account_id, access_token, refresh_token, expires_at, created_at, updated_at
+		SELECT user_id, provider, provider_account_id, access_token, refresh_token, expires_at, pat_encrypted, created_at, updated_at
 		FROM github_account
 		WHERE user_id = $1
 	`
 
 	var account model.GithubAccount
 	var expiresAt sql.NullInt64
+	var patEncrypted sql.NullString
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&account.UserID, &account.Provider, &account.ProviderAccountID,
-		&account.AccessToken, &account.RefreshToken, &expiresAt,
+		&account.AccessToken, &account.RefreshToken, &expiresAt, &patEncrypted,
 		&account.CreatedAt, &account.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("github account not found for user: %s", userID)
+		return nil, nil // アカウントが存在しない場合はnilを返す
 	}
 	if err != nil {
 		r.logger.ErrorContext(ctx, "failed to find github account by user_id", "error", err)
@@ -261,6 +266,9 @@ func (r *githubAccountRepository) FindByUserID(ctx context.Context, userID strin
 		t := time.Unix(expiresAt.Int64, 0)
 		account.ExpiresAt = &t
 	}
+	if patEncrypted.Valid {
+		account.PATEncrypted = &patEncrypted.String
+	}
 
 	return &account, nil
 }
@@ -268,8 +276,8 @@ func (r *githubAccountRepository) FindByUserID(ctx context.Context, userID strin
 func (r *githubAccountRepository) Update(ctx context.Context, account *model.GithubAccount) error {
 	query := `
 		UPDATE github_account
-		SET access_token = $1, refresh_token = $2, expires_at = $3, updated_at = $4
-		WHERE provider = $5 AND provider_account_id = $6
+		SET access_token = $1, refresh_token = $2, expires_at = $3, pat_encrypted = $4, updated_at = $5
+		WHERE provider = $6 AND provider_account_id = $7
 	`
 
 	var expiresAt *int64
@@ -279,7 +287,7 @@ func (r *githubAccountRepository) Update(ctx context.Context, account *model.Git
 	}
 
 	result, err := r.db.ExecContext(ctx, query,
-		account.AccessToken, account.RefreshToken, expiresAt, time.Now(),
+		account.AccessToken, account.RefreshToken, expiresAt, account.PATEncrypted, time.Now(),
 		account.Provider, account.ProviderAccountID,
 	)
 	if err != nil {

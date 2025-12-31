@@ -19,10 +19,12 @@ WebSocketの実装は、以下のルールに従ってください。
 ## 3. Connection Management
 
 ### Library
+
 - **coder/websocket**: `github.com/coder/websocket` を使用すること（よりアクティブにメンテナンスされている）。
 - **Origin Check**: 本番環境では適切なオリジンチェック（CORS）を実装すること。`AcceptOptions`で`InsecureSkipVerify`を`false`に設定すること。
 
 ### Read/Write Pumps
+
 - **readPump**: WebSocketからメッセージを読み取り、処理するgoroutine。
 - **writePump**: Hubからのブロードキャストをクライアントに送信するgoroutine。
 - **Ping/Pong**: 定期的にPingを送信し、接続の生存確認を行うこと（推奨: 54秒間隔）。
@@ -40,6 +42,7 @@ WebSocketの実装は、以下のルールに従ってください。
 ## 実装例
 
 ### 接続URL
+
 ```
 ws://localhost:8080/ws
 ```
@@ -47,6 +50,7 @@ ws://localhost:8080/ws
 ### メッセージフォーマット (JSON)
 
 #### クライアント → サーバー
+
 ```json
 {
   "command": "list_users"
@@ -54,6 +58,7 @@ ws://localhost:8080/ws
 ```
 
 #### サーバー → クライアント
+
 ```json
 {
   "type": "user_list",

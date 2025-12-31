@@ -116,7 +116,7 @@ jobs:
           path: frontend/dist
           retention-days: 1
 
-          # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
   docker:
     name: Docker Build & Push
     if: startsWith(github.ref, 'refs/tags/v')

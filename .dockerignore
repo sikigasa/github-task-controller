@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# GitHub
+.github
+
+# ドキュメント
+*.md
+!README.md
+
+# IDE / エディタ
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS 生成ファイル
+.DS_Store
+Thumbs.db
+
+# バックエンド
+backend/bin
+backend/tmp
+backend/*.exe
+backend/coverage.out
+
+# フロントエンド
+frontend/node_modules
+frontend/dist
+frontend/.pnpm-store
+frontend/coverage
+
+# Docker
+docker-compose*.yaml
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# 環境変数
+.env
+.env.*
+!.env.example
+
+# ログ
+*.log
+
+# テスト
+**/test
+**/*_test.go
+**/*.test.ts
+**/*.spec.ts

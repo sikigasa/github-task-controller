@@ -1,1 +1,1 @@
-ALTER TABLE task DROP COLUMN priority;
+ALTER TABLE task DROP COLUMN IF EXISTS priority;

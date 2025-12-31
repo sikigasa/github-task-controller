@@ -143,8 +143,8 @@ export const AllTasks: React.FC = () => {
           <div className="flex flex-col gap-6 pb-10">
             {/* Calendar Section */}
             {showCalendar && (
-              <div className="h-[500px] flex gap-6 animate-in slide-in-from-top-4 fade-in duration-200 flex-shrink-0">
-                <div className="flex-1 min-w-0 bg-card rounded-lg border border-border shadow-sm overflow-hidden flex flex-col">
+              <div className="flex gap-6 animate-in slide-in-from-top-4 fade-in duration-200 flex-shrink-0">
+                <div className="flex-1 min-w-0 bg-card rounded-lg border border-border shadow-sm overflow-hidden">
                   <Calendar tasks={calendarTasks} onTaskClick={handleTaskClick} />
                 </div>
               </div>

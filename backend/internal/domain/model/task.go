@@ -22,13 +22,21 @@ const (
 
 // Task はタスクを表すドメインモデル
 type Task struct {
-	ID          string       `json:"id"`
-	ProjectID   string       `json:"project_id"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Status      TaskStatus   `json:"status"`
-	Priority    TaskPriority `json:"priority"`
-	EndDate     *time.Time   `json:"end_date,omitempty"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
+	ID                string       `json:"id"`
+	ProjectID         string       `json:"project_id"`
+	Title             string       `json:"title"`
+	Description       string       `json:"description"`
+	Status            TaskStatus   `json:"status"`
+	Priority          TaskPriority `json:"priority"`
+	EndDate           *time.Time   `json:"end_date,omitempty"`
+	GithubItemID      *string      `json:"github_item_id,omitempty"`
+	GithubIssueNumber *int         `json:"github_issue_number,omitempty"`
+	GithubIssueURL    *string      `json:"github_issue_url,omitempty"`
+	CreatedAt         time.Time    `json:"created_at"`
+	UpdatedAt         time.Time    `json:"updated_at"`
+}
+
+// HasGithubIssue はGitHub Issueが紐づいているかを返す
+func (t *Task) HasGithubIssue() bool {
+	return t.GithubIssueURL != nil && *t.GithubIssueURL != ""
 }

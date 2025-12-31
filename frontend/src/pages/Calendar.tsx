@@ -41,7 +41,7 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-card rounded-lg border border-border shadow-sm flex flex-col">
       {/* Header */}
       <div className="shrink-0 p-4 border-b border-border flex items-center justify-between bg-card">
         <div className="flex items-center gap-4">
@@ -74,8 +74,8 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
       </div>
 
       {/* Calendar Body */}
-      <div className="flex-1 overflow-auto">
-        <div className="min-w-[700px] h-full flex flex-col">
+      <div className="flex-1">
+        <div className="min-w-[700px] flex flex-col">
           {/* Week Days Header */}
           <div className="shrink-0 grid grid-cols-7 border-b border-border bg-muted/30">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -90,8 +90,8 @@ export const Calendar: React.FC<CalendarProps> = ({ tasks, onTaskClick }) => {
 
           {/* Calendar Grid */}
           <div
-            className="flex-1 grid grid-cols-7"
-            style={{ gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))` }}
+            className="grid grid-cols-7"
+            style={{ gridTemplateRows: `repeat(${weeks}, 80px)` }}
           >
             {days.map((day, dayIdx) => {
               const dayTasks = getTasksForDay(day);

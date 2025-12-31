@@ -10,9 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
+	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/auth"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/persistence"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/handler"
+	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
 	"github.com/sikigasa/github-task-controller/backend/internal/router"
 )
 
@@ -29,6 +33,11 @@ func run() int {
 
 	ctx := context.Background()
 
+	// .envファイルから環境変数を読み込む
+	if err := godotenv.Load(); err != nil {
+		logger.Warn("failed to load .env file, using environment variables", "error", err)
+	}
+
 	// 環境変数の読み込み
 	dbConfig := persistence.DBConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
@@ -37,6 +46,28 @@ func run() int {
 		Password: getEnv("DB_PASSWORD", "postgres"),
 		DBName:   getEnv("DB_NAME", "todoapp"),
 		SSLMode:  getEnv("DB_SSLMODE", "disable"),
+	}
+
+	// OAuth設定
+	googleClientID := getEnv("GOOGLE_CLIENT_ID", "")
+	googleClientSecret := getEnv("GOOGLE_CLIENT_SECRET", "")
+	googleRedirectURL := getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/callback")
+	frontendURL := getEnv("FRONTEND_URL", "http://localhost:5173")
+	sessionSecret := getEnv("SESSION_SECRET", "your-secret-key-change-in-production")
+
+	if googleClientID == "" || googleClientSecret == "" {
+		logger.Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set")
+		return 1
+	}
+
+	// セッションストアの初期化
+	sessionStore := sessions.NewCookieStore([]byte(sessionSecret))
+	sessionStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   60 * 60 * 24 * 7, // 7日間
+		HttpOnly: true,
+		Secure:   false, // 本番環境ではtrueに設定
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	// データベース接続
@@ -53,20 +84,30 @@ func run() int {
 		return 1
 	}
 
+	// OAuth設定の初期化
+	oauthConfig := auth.NewOAuthConfig(googleClientID, googleClientSecret, googleRedirectURL, logger)
+
 	// 依存性の注入
 	todoRepo := persistence.NewTodoRepository(db, logger)
+	userRepo := persistence.NewUserRepository(db, logger)
+
 	todoUsecase := usecase.NewTodoUsecase(todoRepo, logger)
+	authUsecase := usecase.NewAuthUsecase(userRepo, oauthConfig, logger)
+
 	todoHandler := handler.NewTodoHandler(todoUsecase, logger)
+	authHandler := handler.NewAuthHandler(authUsecase, sessionStore, frontendURL, logger)
+
+	authMiddleware := middleware.NewAuthMiddleware(sessionStore, logger)
 
 	// ルーターのセットアップ
-	r := router.NewRouter(todoHandler, logger)
-	handler := r.Setup()
+	r := router.NewRouter(todoHandler, authHandler, authMiddleware, logger)
+	httpHandler := r.Setup()
 
 	// サーバーの設定
 	port := getEnv("PORT", "8080")
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
-		Handler:      handler,
+		Handler:      httpHandler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

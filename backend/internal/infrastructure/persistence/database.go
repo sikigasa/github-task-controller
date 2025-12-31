@@ -51,6 +51,20 @@ func NewDB(ctx context.Context, cfg DBConfig, logger *slog.Logger) (*sql.DB, err
 // InitSchema はデータベーススキーマを初期化する
 func InitSchema(ctx context.Context, db *sql.DB, logger *slog.Logger) error {
 	schema := `
+		CREATE TABLE IF NOT EXISTS users (
+			id VARCHAR(36) PRIMARY KEY,
+			email VARCHAR(255) NOT NULL UNIQUE,
+			name VARCHAR(255) NOT NULL,
+			picture TEXT,
+			google_id VARCHAR(255) NOT NULL UNIQUE,
+			refresh_token TEXT,
+			created_at TIMESTAMP NOT NULL,
+			updated_at TIMESTAMP NOT NULL
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+		CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+
 		CREATE TABLE IF NOT EXISTS todos (
 			id VARCHAR(36) PRIMARY KEY,
 			title VARCHAR(200) NOT NULL,

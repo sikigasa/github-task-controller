@@ -8,21 +8,31 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/handler"
+	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
 )
 
 // Router はアプリケーションのルーティングを管理する
 type Router struct {
-	mux         *mux.Router
-	todoHandler *handler.TodoHandler
-	logger      *slog.Logger
+	mux            *mux.Router
+	todoHandler    *handler.TodoHandler
+	authHandler    *handler.AuthHandler
+	authMiddleware *middleware.AuthMiddleware
+	logger         *slog.Logger
 }
 
 // NewRouter は新しいRouterを作成する
-func NewRouter(todoHandler *handler.TodoHandler, logger *slog.Logger) *Router {
+func NewRouter(
+	todoHandler *handler.TodoHandler,
+	authHandler *handler.AuthHandler,
+	authMiddleware *middleware.AuthMiddleware,
+	logger *slog.Logger,
+) *Router {
 	return &Router{
-		mux:         mux.NewRouter(),
-		todoHandler: todoHandler,
-		logger:      logger,
+		mux:            mux.NewRouter(),
+		todoHandler:    todoHandler,
+		authHandler:    authHandler,
+		authMiddleware: authMiddleware,
+		logger:         logger,
 	}
 }
 
@@ -35,15 +45,24 @@ func (r *Router) Setup() http.Handler {
 	// ヘルスチェック
 	r.mux.HandleFunc("/health", r.healthCheck).Methods(http.MethodGet)
 
+	// 認証エンドポイント（認証不要）
+	auth := r.mux.PathPrefix("/auth").Subrouter()
+	auth.HandleFunc("/login", r.authHandler.Login).Methods(http.MethodGet)
+	auth.HandleFunc("/callback", r.authHandler.Callback).Methods(http.MethodGet)
+	auth.HandleFunc("/logout", r.authHandler.Logout).Methods(http.MethodPost)
+	auth.HandleFunc("/me", r.authHandler.Me).Methods(http.MethodGet)
+
 	// APIルーティング
 	api := r.mux.PathPrefix("/api/v1").Subrouter()
 
-	// TODOエンドポイント
-	api.HandleFunc("/todos", r.todoHandler.Create).Methods(http.MethodPost)
-	api.HandleFunc("/todos", r.todoHandler.List).Methods(http.MethodGet)
-	api.HandleFunc("/todos/{id}", r.todoHandler.Get).Methods(http.MethodGet)
-	api.HandleFunc("/todos/{id}", r.todoHandler.Update).Methods(http.MethodPut)
-	api.HandleFunc("/todos/{id}", r.todoHandler.Delete).Methods(http.MethodDelete)
+	// 認証が必要なTODOエンドポイント
+	protectedAPI := api.PathPrefix("").Subrouter()
+	protectedAPI.Use(r.authMiddleware.RequireAuth)
+	protectedAPI.HandleFunc("/todos", r.todoHandler.Create).Methods(http.MethodPost)
+	protectedAPI.HandleFunc("/todos", r.todoHandler.List).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Get).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Update).Methods(http.MethodPut)
+	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Delete).Methods(http.MethodDelete)
 
 	// CORS設定
 	c := cors.New(cors.Options{

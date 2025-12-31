@@ -20,31 +20,31 @@ genproto:
 
 # マイグレーションファイル作成: make gomigrate file=create_users
 gomigrate:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate create -ext sql -dir db/migrations -seq $(file)
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate create -ext sql -dir ../db/migrations -seq $(file)
 
 # マイグレーション実行（全て適用）
 migrateup:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' -verbose up
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose up
 
 # マイグレーション実行（指定数だけ適用）: make migrateup-n n=1
 migrateup-n:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' -verbose up $(n)
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose up $(n)
 
 # マイグレーションロールバック（全て）
 migratedown:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' -verbose down
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose down
 
 # マイグレーションロールバック（指定数）: make migratedown-n n=1
 migratedown-n:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' -verbose down $(n)
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' -verbose down $(n)
 
 # マイグレーション強制バージョン設定: make migrateforce v=3
 migrateforce:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' force $(v)
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' force $(v)
 
 # マイグレーションバージョン確認
 migrateversion:
-	go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path db/migrations -database '$(DATABASE_URL)' version
+	cd backend && go run -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate -path ../db/migrations -database '$(DATABASE_URL)' version
 
 goupdate:
 	go get -t -u ./...

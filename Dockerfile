@@ -39,37 +39,24 @@ COPY backend/ ./
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/server
 
 # -----------------------------------------------------------------------------
-# Stage 3: 本番用イメージ
+# Stage 3: 本番用イメージ (Distroless)
 # -----------------------------------------------------------------------------
-FROM alpine:3.20 AS production
-
-# セキュリティアップデートと必要なパッケージのインストール
-RUN apk --no-cache add ca-certificates tzdata
-
-# 非rootユーザーを作成
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
+# Distroless: シェルやパッケージマネージャーを含まない最小イメージ
+# - 攻撃対象領域を最小化
+# - イメージサイズを削減
+# - nonroot タグで非rootユーザーとして実行
+FROM gcr.io/distroless/static-debian12:nonroot AS production
 
 WORKDIR /app
 
-# バックエンドバイナリをコピー
-COPY --from=backend-builder /app/server ./server
+# バックエンドバイナリをコピー（nonrootユーザー所有）
+COPY --from=backend-builder --chown=nonroot:nonroot /app/server ./server
 
-# フロントエンドのビルド成果物をコピー
-COPY --from=frontend-builder /app/frontend/dist ./public
-
-# 所有権を変更
-RUN chown -R appuser:appgroup /app
-
-# 非rootユーザーに切り替え
-USER appuser
+# フロントエンドのビルド成果物をコピー（nonrootユーザー所有）
+COPY --from=frontend-builder --chown=nonroot:nonroot /app/frontend/dist ./public
 
 # ポートを公開
 EXPOSE 8080
 
-# ヘルスチェック
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
-
 # アプリケーションを起動
-CMD ["./server"]
+ENTRYPOINT ["./server"]

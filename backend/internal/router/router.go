@@ -90,11 +90,12 @@ func (r *Router) Setup() http.Handler {
 	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Delete).Methods(http.MethodDelete)
 
 	// CORS設定
+	// credentials: 'include' を使用する場合、AllowedOrigins に "*" は使用不可
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"}, // 本番環境では適切に設定すること
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
-		ExposedHeaders:   []string{"Content-Length"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Cookie"},
+		ExposedHeaders:   []string{"Content-Length", "Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	})

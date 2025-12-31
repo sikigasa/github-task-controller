@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 	"github.com/sikigasa/github-task-controller/backend/internal/domain/repository"
-	"github.com/sikigasa/github-task-controller/backend/internal/model"
 )
 
 // TodoRepositoryImpl はTodoRepositoryの実装
@@ -25,7 +25,7 @@ func NewTodoRepository(db *sql.DB, logger *slog.Logger) repository.TodoRepositor
 	}
 }
 
-// Create は新しいTODOをデータベースに保存する
+// Create は新しいTODOを作成する
 func (r *TodoRepositoryImpl) Create(ctx context.Context, todo *model.Todo) error {
 	query := `
 		INSERT INTO todos (id, title, description, completed, created_at, updated_at)
@@ -109,8 +109,8 @@ func (r *TodoRepositoryImpl) FindAll(ctx context.Context) ([]*model.Todo, error)
 	}
 
 	if err := rows.Err(); err != nil {
-		r.logger.ErrorContext(ctx, "error iterating todos", "error", err)
-		return nil, fmt.Errorf("error iterating todos: %w", err)
+		r.logger.ErrorContext(ctx, "rows error", "error", err)
+		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
 	return todos, nil

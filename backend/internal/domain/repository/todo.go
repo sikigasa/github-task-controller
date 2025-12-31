@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/sikigasa/github-task-controller/backend/internal/model"
+	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 )
 
 // TodoRepository はTODOのデータアクセスを抽象化するインターフェース

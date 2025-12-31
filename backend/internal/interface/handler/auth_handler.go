@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
-	"github.com/sikigasa/github-task-controller/backend/internal/model"
+	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 )
 
 const (
@@ -48,7 +48,7 @@ func NewAuthHandler(
 // Login はGoogle OAuth認証を開始する
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	h.logger.InfoContext(ctx, "starting oauth login")
+	h.logger.InfoContext(ctx, "starting google oauth login")
 
 	// 状態トークンを生成
 	state, err := h.authUsecase.GenerateStateToken()
@@ -68,14 +68,41 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Google認証URLにリダイレクト
-	authURL := h.authUsecase.GetAuthURL(state)
+	authURL := h.authUsecase.GetAuthURL("google", state)
+	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+}
+
+// LoginGithub はGitHub OAuth認証を開始する
+func (h *AuthHandler) LoginGithub(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	h.logger.InfoContext(ctx, "starting github oauth login")
+
+	// 状態トークンを生成
+	state, err := h.authUsecase.GenerateStateToken()
+	if err != nil {
+		h.logger.ErrorContext(ctx, "failed to generate state token", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// セッションに状態を保存
+	session, _ := h.sessionStore.Get(r, sessionName)
+	session.Values[oauthStateKey] = state
+	if err := session.Save(r, w); err != nil {
+		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// GitHub認証URLにリダイレクト
+	authURL := h.authUsecase.GetAuthURL("github", state)
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
 
 // Callback はGoogle OAuth認証のコールバックを処理する
 func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	h.logger.InfoContext(ctx, "handling oauth callback")
+	h.logger.InfoContext(ctx, "handling google oauth callback")
 
 	// セッションから状態を取得
 	session, _ := h.sessionStore.Get(r, sessionName)
@@ -103,7 +130,71 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// コールバックを処理してユーザー情報を取得
-	user, _, err := h.authUsecase.HandleCallback(ctx, code)
+	user, _, err := h.authUsecase.HandleCallback(ctx, "google", code)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
+		http.Redirect(w, r, h.frontendURL+"?error=auth_failed", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// セッションにユーザー情報を保存
+	sessionInfo := h.authUsecase.CreateSession(user, time.Duration(sessionMaxAge)*time.Second)
+	session.Values[sessionKeyUserID] = sessionInfo.UserID
+	session.Values[sessionKeyEmail] = sessionInfo.Email
+	session.Values[sessionKeyName] = sessionInfo.Name
+	session.Values[sessionKeyPicture] = sessionInfo.Picture
+	session.Values[sessionKeyExpiresAt] = sessionInfo.ExpiresAt.Unix()
+	delete(session.Values, oauthStateKey)
+
+	session.Options.MaxAge = sessionMaxAge
+	session.Options.HttpOnly = true
+	session.Options.Secure = true // HTTPS環境では必須
+	session.Options.SameSite = http.SameSiteLaxMode
+
+	if err := session.Save(r, w); err != nil {
+		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
+		http.Redirect(w, r, h.frontendURL+"?error=session_failed", http.StatusTemporaryRedirect)
+		return
+	}
+
+	h.logger.InfoContext(ctx, "user logged in successfully", "user_id", user.ID)
+
+	// フロントエンドにリダイレクト
+	http.Redirect(w, r, h.frontendURL, http.StatusTemporaryRedirect)
+}
+
+// CallbackGithub はGitHub OAuth認証のコールバックを処理する
+func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	h.logger.InfoContext(ctx, "handling github oauth callback")
+
+	// セッションから状態を取得
+	session, _ := h.sessionStore.Get(r, sessionName)
+	savedState, ok := session.Values[oauthStateKey].(string)
+	if !ok || savedState == "" {
+		h.logger.WarnContext(ctx, "state not found in session")
+		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// 状態を検証
+	state := r.URL.Query().Get("state")
+	if state != savedState {
+		h.logger.WarnContext(ctx, "state mismatch", "expected", savedState, "got", state)
+		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// 認証コードを取得
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		h.logger.WarnContext(ctx, "code not found in query")
+		http.Redirect(w, r, h.frontendURL+"?error=no_code", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// コールバックを処理してユーザー情報を取得
+	user, _, err := h.authUsecase.HandleCallback(ctx, "github", code)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
 		http.Redirect(w, r, h.frontendURL+"?error=auth_failed", http.StatusTemporaryRedirect)
@@ -191,7 +282,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		"id":      user.ID,
 		"email":   user.Email,
 		"name":    user.Name,
-		"picture": user.Picture,
+		"picture": user.ImageURL,
 	})
 }
 

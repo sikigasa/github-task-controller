@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 	"github.com/sikigasa/github-task-controller/backend/internal/domain/repository"
-	"github.com/sikigasa/github-task-controller/backend/internal/model"
 )
 
 // TodoUsecase はTODOに関するビジネスロジックを実装する

@@ -15,6 +15,8 @@ import (
 type Router struct {
 	mux            *mux.Router
 	todoHandler    *handler.TodoHandler
+	projectHandler *handler.ProjectHandler
+	taskHandler    *handler.TaskHandler
 	authHandler    *handler.AuthHandler
 	authMiddleware *middleware.AuthMiddleware
 	logger         *slog.Logger
@@ -23,6 +25,8 @@ type Router struct {
 // NewRouter は新しいRouterを作成する
 func NewRouter(
 	todoHandler *handler.TodoHandler,
+	projectHandler *handler.ProjectHandler,
+	taskHandler *handler.TaskHandler,
 	authHandler *handler.AuthHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	logger *slog.Logger,
@@ -30,6 +34,8 @@ func NewRouter(
 	return &Router{
 		mux:            mux.NewRouter(),
 		todoHandler:    todoHandler,
+		projectHandler: projectHandler,
+		taskHandler:    taskHandler,
 		authHandler:    authHandler,
 		authMiddleware: authMiddleware,
 		logger:         logger,
@@ -47,8 +53,13 @@ func (r *Router) Setup() http.Handler {
 
 	// 認証エンドポイント（認証不要）
 	auth := r.mux.PathPrefix("/auth").Subrouter()
-	auth.HandleFunc("/login", r.authHandler.Login).Methods(http.MethodGet)
-	auth.HandleFunc("/callback", r.authHandler.Callback).Methods(http.MethodGet)
+	// Google OAuth
+	auth.HandleFunc("/google/login", r.authHandler.Login).Methods(http.MethodGet)
+	auth.HandleFunc("/google/callback", r.authHandler.Callback).Methods(http.MethodGet)
+	// GitHub OAuth
+	auth.HandleFunc("/github/login", r.authHandler.LoginGithub).Methods(http.MethodGet)
+	auth.HandleFunc("/github/callback", r.authHandler.CallbackGithub).Methods(http.MethodGet)
+	// 共通
 	auth.HandleFunc("/logout", r.authHandler.Logout).Methods(http.MethodPost)
 	auth.HandleFunc("/me", r.authHandler.Me).Methods(http.MethodGet)
 
@@ -63,6 +74,20 @@ func (r *Router) Setup() http.Handler {
 	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Get).Methods(http.MethodGet)
 	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Update).Methods(http.MethodPut)
 	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Delete).Methods(http.MethodDelete)
+
+	// プロジェクトエンドポイント
+	protectedAPI.HandleFunc("/projects", r.projectHandler.Create).Methods(http.MethodPost)
+	protectedAPI.HandleFunc("/projects", r.projectHandler.ListByUserID).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Get).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Update).Methods(http.MethodPut)
+	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Delete).Methods(http.MethodDelete)
+
+	// タスクエンドポイント
+	protectedAPI.HandleFunc("/tasks", r.taskHandler.Create).Methods(http.MethodPost)
+	protectedAPI.HandleFunc("/tasks", r.taskHandler.ListByProjectID).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Get).Methods(http.MethodGet)
+	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Update).Methods(http.MethodPut)
+	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Delete).Methods(http.MethodDelete)
 
 	// CORS設定
 	c := cors.New(cors.Options{

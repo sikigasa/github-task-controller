@@ -49,33 +49,80 @@ func NewDB(ctx context.Context, cfg DBConfig, logger *slog.Logger) (*sql.DB, err
 }
 
 // InitSchema はデータベーススキーマを初期化する
+// 注意: 本番環境ではマイグレーションツール（golang-migrate等）を使用してください
 func InitSchema(ctx context.Context, db *sql.DB, logger *slog.Logger) error {
 	schema := `
+		-- pg_uuidv7拡張が必要な場合はマイグレーションで実行
+		-- CREATE EXTENSION IF NOT EXISTS pg_uuidv7;
+
 		CREATE TABLE IF NOT EXISTS users (
-			id VARCHAR(36) PRIMARY KEY,
-			email VARCHAR(255) NOT NULL UNIQUE,
-			name VARCHAR(255) NOT NULL,
-			picture TEXT,
-			google_id VARCHAR(255) NOT NULL UNIQUE,
-			refresh_token TEXT,
-			created_at TIMESTAMP NOT NULL,
-			updated_at TIMESTAMP NOT NULL
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			email VARCHAR(255) UNIQUE NOT NULL,
+			name VARCHAR(255),
+			image_url TEXT,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 
-		CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-		CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+		CREATE TABLE IF NOT EXISTS github_account (
+			user_id uuid NOT NULL,
+			provider VARCHAR NOT NULL,
+			provider_account_id VARCHAR NOT NULL,
+			access_token VARCHAR,
+			refresh_token VARCHAR,
+			expires_at BIGINT,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT github_account_pk PRIMARY KEY (provider, provider_account_id),
+			CONSTRAINT github_account_user_fk
+				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
 
-		CREATE TABLE IF NOT EXISTS todos (
-			id VARCHAR(36) PRIMARY KEY,
-			title VARCHAR(200) NOT NULL,
+		CREATE TABLE IF NOT EXISTS google_account (
+			user_id uuid NOT NULL,
+			provider VARCHAR NOT NULL,
+			provider_account_id VARCHAR NOT NULL,
+			access_token VARCHAR,
+			refresh_token VARCHAR,
+			expires_at BIGINT,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT google_account_pk PRIMARY KEY (provider, provider_account_id),
+			CONSTRAINT google_account_user_fk
+				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		);
+
+		CREATE TABLE IF NOT EXISTS project (
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id uuid NOT NULL,
+			title VARCHAR NOT NULL,
 			description TEXT,
-			completed BOOLEAN NOT NULL DEFAULT FALSE,
-			created_at TIMESTAMP NOT NULL,
-			updated_at TIMESTAMP NOT NULL
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT project_user_fk
+				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 
-		CREATE INDEX IF NOT EXISTS idx_todos_created_at ON todos(created_at);
-		CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
+		CREATE TABLE IF NOT EXISTS task (
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			project_id uuid NOT NULL,
+			title VARCHAR(255) NOT NULL,
+			description TEXT,
+			status INT NOT NULL,
+			end_date TIMESTAMP,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT task_project_fk
+				FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+		);
+
+		-- インデックス
+		CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+		CREATE INDEX IF NOT EXISTS idx_github_account_user_id ON github_account(user_id);
+		CREATE INDEX IF NOT EXISTS idx_google_account_user_id ON google_account(user_id);
+		CREATE INDEX IF NOT EXISTS idx_project_user_id ON project(user_id);
+		CREATE INDEX IF NOT EXISTS idx_task_project_id ON task(project_id);
+		CREATE INDEX IF NOT EXISTS idx_task_status ON task(status);
 	`
 
 	_, err := db.ExecContext(ctx, schema)

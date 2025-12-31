@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
-	"github.com/sikigasa/github-task-controller/backend/internal/model"
+	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 )
 
 // TodoHandler はTODOに関するHTTPリクエストを処理する

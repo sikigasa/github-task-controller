@@ -51,12 +51,20 @@ func run() int {
 	// OAuth設定
 	googleClientID := getEnv("GOOGLE_CLIENT_ID", "")
 	googleClientSecret := getEnv("GOOGLE_CLIENT_SECRET", "")
-	googleRedirectURL := getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/callback")
+	googleRedirectURL := getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/google/callback")
+	githubClientID := getEnv("GITHUB_CLIENT_ID", "")
+	githubClientSecret := getEnv("GITHUB_CLIENT_SECRET", "")
+	githubRedirectURL := getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/auth/github/callback")
 	frontendURL := getEnv("FRONTEND_URL", "http://localhost:5173")
 	sessionSecret := getEnv("SESSION_SECRET", "your-secret-key-change-in-production")
 
 	if googleClientID == "" || googleClientSecret == "" {
 		logger.Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set")
+		return 1
+	}
+
+	if githubClientID == "" || githubClientSecret == "" {
+		logger.Error("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set")
 		return 1
 	}
 
@@ -85,22 +93,34 @@ func run() int {
 	}
 
 	// OAuth設定の初期化
-	oauthConfig := auth.NewOAuthConfig(googleClientID, googleClientSecret, googleRedirectURL, logger)
+	oauthConfig := auth.NewOAuthConfig(
+		googleClientID, googleClientSecret, googleRedirectURL,
+		githubClientID, githubClientSecret, githubRedirectURL,
+		logger,
+	)
 
 	// 依存性の注入
 	todoRepo := persistence.NewTodoRepository(db, logger)
 	userRepo := persistence.NewUserRepository(db, logger)
+	googleAccountRepo := persistence.NewGoogleAccountRepository(db, logger)
+	githubAccountRepo := persistence.NewGithubAccountRepository(db, logger)
+	projectRepo := persistence.NewProjectRepository(db, logger)
+	taskRepo := persistence.NewTaskRepository(db, logger)
 
 	todoUsecase := usecase.NewTodoUsecase(todoRepo, logger)
-	authUsecase := usecase.NewAuthUsecase(userRepo, oauthConfig, logger)
+	authUsecase := usecase.NewAuthUsecase(userRepo, googleAccountRepo, githubAccountRepo, oauthConfig, logger)
+	projectUsecase := usecase.NewProjectUsecase(projectRepo, logger)
+	taskUsecase := usecase.NewTaskUsecase(taskRepo, logger)
 
 	todoHandler := handler.NewTodoHandler(todoUsecase, logger)
 	authHandler := handler.NewAuthHandler(authUsecase, sessionStore, frontendURL, logger)
+	projectHandler := handler.NewProjectHandler(projectUsecase, logger)
+	taskHandler := handler.NewTaskHandler(taskUsecase, logger)
 
 	authMiddleware := middleware.NewAuthMiddleware(sessionStore, logger)
 
 	// ルーターのセットアップ
-	r := router.NewRouter(todoHandler, authHandler, authMiddleware, logger)
+	r := router.NewRouter(todoHandler, projectHandler, taskHandler, authHandler, authMiddleware, logger)
 	httpHandler := r.Setup()
 
 	// サーバーの設定

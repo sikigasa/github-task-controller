@@ -148,7 +148,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	session.Options.MaxAge = sessionMaxAge
 	session.Options.HttpOnly = true
-	session.Options.Secure = true // HTTPS環境では必須
+	session.Options.Secure = false // ローカル開発環境ではfalse、本番ではtrue
 	session.Options.SameSite = http.SameSiteLaxMode
 
 	if err := session.Save(r, w); err != nil {
@@ -212,7 +212,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 
 	session.Options.MaxAge = sessionMaxAge
 	session.Options.HttpOnly = true
-	session.Options.Secure = true // HTTPS環境では必須
+	session.Options.Secure = false // ローカル開発環境ではfalse、本番ではtrue
 	session.Options.SameSite = http.SameSiteLaxMode
 
 	if err := session.Save(r, w); err != nil {

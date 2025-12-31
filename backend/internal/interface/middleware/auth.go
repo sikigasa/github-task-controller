@@ -4,9 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"time"
 
-	"github.com/gorilla/sessions"
+	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/session"
 )
 
 // ContextKey はコンテキストキーの型
@@ -27,12 +26,12 @@ const (
 
 // AuthMiddleware は認証ミドルウェア
 type AuthMiddleware struct {
-	sessionStore sessions.Store
+	sessionStore *session.CookieStore
 	logger       *slog.Logger
 }
 
 // NewAuthMiddleware は新しいAuthMiddlewareを作成する
-func NewAuthMiddleware(sessionStore sessions.Store, logger *slog.Logger) *AuthMiddleware {
+func NewAuthMiddleware(sessionStore *session.CookieStore, logger *slog.Logger) *AuthMiddleware {
 	return &AuthMiddleware{
 		sessionStore: sessionStore,
 		logger:       logger,
@@ -45,14 +44,14 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// セッションからユーザー情報を取得
-		session, err := m.sessionStore.Get(r, sessionName)
+		sess, err := m.sessionStore.Get(r, sessionName)
 		if err != nil {
 			m.logger.ErrorContext(ctx, "failed to get session", "error", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		userID, ok := session.Values[sessionKeyUserID].(string)
+		userID, ok := sess.GetString(sessionKeyUserID)
 		if !ok || userID == "" {
 			m.logger.InfoContext(ctx, "user not authenticated")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -60,18 +59,16 @@ func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
 		}
 
 		// セッション有効期限を確認
-		expiresAt, ok := session.Values[sessionKeyExpiresAt].(int64)
-		if !ok || time.Now().Unix() > expiresAt {
+		if sess.IsExpired(sessionKeyExpiresAt) {
 			m.logger.InfoContext(ctx, "session expired", "user_id", userID)
-			session.Options.MaxAge = -1
-			session.Save(r, w)
+			m.sessionStore.Delete(w, sessionName)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		// コンテキストにユーザーIDを追加
 		ctx = context.WithValue(ctx, UserIDKey, userID)
-		ctx = context.WithValue(ctx, SessionKey, session.Values)
+		ctx = context.WithValue(ctx, SessionKey, sess.Values)
 
 		m.logger.InfoContext(ctx, "user authenticated", "user_id", userID)
 
@@ -87,14 +84,14 @@ func (m *AuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// セッションからユーザー情報を取得
-		session, err := m.sessionStore.Get(r, sessionName)
+		sess, err := m.sessionStore.Get(r, sessionName)
 		if err != nil {
 			// エラーがあっても続行
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		userID, ok := session.Values[sessionKeyUserID].(string)
+		userID, ok := sess.GetString(sessionKeyUserID)
 		if !ok || userID == "" {
 			// ユーザーIDがなくても続行
 			next.ServeHTTP(w, r)
@@ -102,8 +99,7 @@ func (m *AuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
 		}
 
 		// セッション有効期限を確認
-		expiresAt, ok := session.Values[sessionKeyExpiresAt].(int64)
-		if !ok || time.Now().Unix() > expiresAt {
+		if sess.IsExpired(sessionKeyExpiresAt) {
 			// 期限切れでも続行
 			next.ServeHTTP(w, r)
 			return
@@ -111,7 +107,7 @@ func (m *AuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
 
 		// コンテキストにユーザーIDを追加
 		ctx = context.WithValue(ctx, UserIDKey, userID)
-		ctx = context.WithValue(ctx, SessionKey, session.Values)
+		ctx = context.WithValue(ctx, SessionKey, sess.Values)
 
 		// 次のハンドラーを実行
 		next.ServeHTTP(w, r.WithContext(ctx))

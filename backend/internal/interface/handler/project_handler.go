@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
 )
@@ -70,8 +69,7 @@ func (h *ProjectHandler) Create(w http.ResponseWriter, r *http.Request) {
 // Get はIDでプロジェクトを取得する
 func (h *ProjectHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	// 認証されたユーザーIDを取得
 	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)
@@ -127,8 +125,7 @@ func (h *ProjectHandler) ListByUserID(w http.ResponseWriter, r *http.Request) {
 // Update はプロジェクト情報を更新する
 func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	// 認証されたユーザーIDを取得
 	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)
@@ -180,8 +177,7 @@ func (h *ProjectHandler) Update(w http.ResponseWriter, r *http.Request) {
 // Delete はプロジェクトを削除する
 func (h *ProjectHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	// 認証されたユーザーIDを取得
 	authenticatedUserID, ok := middleware.GetUserIDFromContext(ctx)

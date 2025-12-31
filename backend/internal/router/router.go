@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/handler"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
@@ -13,7 +12,7 @@ import (
 
 // Router はアプリケーションのルーティングを管理する
 type Router struct {
-	mux            *mux.Router
+	mux            *http.ServeMux
 	todoHandler    *handler.TodoHandler
 	projectHandler *handler.ProjectHandler
 	taskHandler    *handler.TaskHandler
@@ -32,7 +31,7 @@ func NewRouter(
 	logger *slog.Logger,
 ) *Router {
 	return &Router{
-		mux:            mux.NewRouter(),
+		mux:            http.NewServeMux(),
 		todoHandler:    todoHandler,
 		projectHandler: projectHandler,
 		taskHandler:    taskHandler,
@@ -44,50 +43,41 @@ func NewRouter(
 
 // Setup はルーティングを設定する
 func (r *Router) Setup() http.Handler {
-	// ミドルウェアの設定
-	r.mux.Use(r.loggingMiddleware)
-	r.mux.Use(r.recoveryMiddleware)
-
 	// ヘルスチェック
-	r.mux.HandleFunc("/health", r.healthCheck).Methods(http.MethodGet)
+	r.mux.HandleFunc("GET /health", r.healthCheck)
 
 	// 認証エンドポイント（認証不要）
-	auth := r.mux.PathPrefix("/auth").Subrouter()
 	// Google OAuth
-	auth.HandleFunc("/google/login", r.authHandler.Login).Methods(http.MethodGet)
-	auth.HandleFunc("/google/callback", r.authHandler.Callback).Methods(http.MethodGet)
+	r.mux.HandleFunc("GET /auth/google/login", r.authHandler.Login)
+	r.mux.HandleFunc("GET /auth/google/callback", r.authHandler.Callback)
 	// GitHub OAuth
-	auth.HandleFunc("/github/login", r.authHandler.LoginGithub).Methods(http.MethodGet)
-	auth.HandleFunc("/github/callback", r.authHandler.CallbackGithub).Methods(http.MethodGet)
+	r.mux.HandleFunc("GET /auth/github/login", r.authHandler.LoginGithub)
+	r.mux.HandleFunc("GET /auth/github/callback", r.authHandler.CallbackGithub)
 	// 共通
-	auth.HandleFunc("/logout", r.authHandler.Logout).Methods(http.MethodPost)
-	auth.HandleFunc("/me", r.authHandler.Me).Methods(http.MethodGet)
+	r.mux.HandleFunc("POST /auth/logout", r.authHandler.Logout)
+	r.mux.HandleFunc("GET /auth/me", r.authHandler.Me)
 
-	// APIルーティング
-	api := r.mux.PathPrefix("/api/v1").Subrouter()
-
-	// 認証が必要なTODOエンドポイント
-	protectedAPI := api.PathPrefix("").Subrouter()
-	protectedAPI.Use(r.authMiddleware.RequireAuth)
-	protectedAPI.HandleFunc("/todos", r.todoHandler.Create).Methods(http.MethodPost)
-	protectedAPI.HandleFunc("/todos", r.todoHandler.List).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Get).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Update).Methods(http.MethodPut)
-	protectedAPI.HandleFunc("/todos/{id}", r.todoHandler.Delete).Methods(http.MethodDelete)
+	// 認証が必要なAPIエンドポイント
+	// TODOエンドポイント
+	r.mux.Handle("POST /api/v1/todos", r.authMiddleware.RequireAuth(http.HandlerFunc(r.todoHandler.Create)))
+	r.mux.Handle("GET /api/v1/todos", r.authMiddleware.RequireAuth(http.HandlerFunc(r.todoHandler.List)))
+	r.mux.Handle("GET /api/v1/todos/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.todoHandler.Get)))
+	r.mux.Handle("PUT /api/v1/todos/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.todoHandler.Update)))
+	r.mux.Handle("DELETE /api/v1/todos/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.todoHandler.Delete)))
 
 	// プロジェクトエンドポイント
-	protectedAPI.HandleFunc("/projects", r.projectHandler.Create).Methods(http.MethodPost)
-	protectedAPI.HandleFunc("/projects", r.projectHandler.ListByUserID).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Get).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Update).Methods(http.MethodPut)
-	protectedAPI.HandleFunc("/projects/{id}", r.projectHandler.Delete).Methods(http.MethodDelete)
+	r.mux.Handle("POST /api/v1/projects", r.authMiddleware.RequireAuth(http.HandlerFunc(r.projectHandler.Create)))
+	r.mux.Handle("GET /api/v1/projects", r.authMiddleware.RequireAuth(http.HandlerFunc(r.projectHandler.ListByUserID)))
+	r.mux.Handle("GET /api/v1/projects/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.projectHandler.Get)))
+	r.mux.Handle("PUT /api/v1/projects/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.projectHandler.Update)))
+	r.mux.Handle("DELETE /api/v1/projects/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.projectHandler.Delete)))
 
 	// タスクエンドポイント
-	protectedAPI.HandleFunc("/tasks", r.taskHandler.Create).Methods(http.MethodPost)
-	protectedAPI.HandleFunc("/tasks", r.taskHandler.ListByProjectID).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Get).Methods(http.MethodGet)
-	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Update).Methods(http.MethodPut)
-	protectedAPI.HandleFunc("/tasks/{id}", r.taskHandler.Delete).Methods(http.MethodDelete)
+	r.mux.Handle("POST /api/v1/tasks", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Create)))
+	r.mux.Handle("GET /api/v1/tasks", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.ListByProjectID)))
+	r.mux.Handle("GET /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Get)))
+	r.mux.Handle("PUT /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Update)))
+	r.mux.Handle("DELETE /api/v1/tasks/{id}", r.authMiddleware.RequireAuth(http.HandlerFunc(r.taskHandler.Delete)))
 
 	// CORS設定
 	c := cors.New(cors.Options{
@@ -99,7 +89,12 @@ func (r *Router) Setup() http.Handler {
 		MaxAge:           300,
 	})
 
-	return c.Handler(r.mux)
+	// ミドルウェアを適用
+	var h http.Handler = r.mux
+	h = r.loggingMiddleware(h)
+	h = r.recoveryMiddleware(h)
+
+	return c.Handler(h)
 }
 
 // healthCheck はヘルスチェックエンドポイント

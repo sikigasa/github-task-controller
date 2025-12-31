@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 )
@@ -75,8 +74,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 // Get はIDでタスクを取得する
 func (h *TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	task, err := h.usecase.GetTask(ctx, id)
 	if err != nil {
@@ -117,8 +115,7 @@ func (h *TaskHandler) ListByProjectID(w http.ResponseWriter, r *http.Request) {
 // Update はタスク情報を更新する
 func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	var req UpdateTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -148,8 +145,7 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 // Delete はタスクを削除する
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	if err := h.usecase.DeleteTask(ctx, id); err != nil {
 		h.logger.ErrorContext(ctx, "failed to delete task", "error", err, "id", id)

@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
 )
@@ -102,8 +101,7 @@ func (h *TodoHandler) Create(w http.ResponseWriter, r *http.Request) {
 // Get はTODOを取得する
 func (h *TodoHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	if id == "" {
 		h.respondError(w, r, http.StatusBadRequest, "Invalid Request", "IDが指定されていません")
@@ -139,8 +137,7 @@ func (h *TodoHandler) List(w http.ResponseWriter, r *http.Request) {
 // Update はTODOを更新する
 func (h *TodoHandler) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	if id == "" {
 		h.respondError(w, r, http.StatusBadRequest, "Invalid Request", "IDが指定されていません")
@@ -183,8 +180,7 @@ func (h *TodoHandler) Update(w http.ResponseWriter, r *http.Request) {
 // Delete はTODOを削除する
 func (h *TodoHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.PathValue("id")
 
 	if id == "" {
 		h.respondError(w, r, http.StatusBadRequest, "Invalid Request", "IDが指定されていません")

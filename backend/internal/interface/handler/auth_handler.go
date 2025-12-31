@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/sessions"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/domain/model"
+	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/session"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 // AuthHandler は認証に関するHTTPリクエストを処理する
 type AuthHandler struct {
 	authUsecase  *usecase.AuthUsecase
-	sessionStore sessions.Store
+	sessionStore *session.CookieStore
 	frontendURL  string
 	logger       *slog.Logger
 }
@@ -33,7 +33,7 @@ type AuthHandler struct {
 // NewAuthHandler は新しいAuthHandlerを作成する
 func NewAuthHandler(
 	authUsecase *usecase.AuthUsecase,
-	sessionStore sessions.Store,
+	sessionStore *session.CookieStore,
 	frontendURL string,
 	logger *slog.Logger,
 ) *AuthHandler {
@@ -59,9 +59,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// セッションに状態を保存
-	session, _ := h.sessionStore.Get(r, sessionName)
-	session.Values[oauthStateKey] = state
-	if err := session.Save(r, w); err != nil {
+	sess, _ := h.sessionStore.Get(r, sessionName)
+	sess.Set(oauthStateKey, state)
+	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -86,9 +86,9 @@ func (h *AuthHandler) LoginGithub(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// セッションに状態を保存
-	session, _ := h.sessionStore.Get(r, sessionName)
-	session.Values[oauthStateKey] = state
-	if err := session.Save(r, w); err != nil {
+	sess, _ := h.sessionStore.Get(r, sessionName)
+	sess.Set(oauthStateKey, state)
+	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -105,8 +105,8 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	h.logger.InfoContext(ctx, "handling google oauth callback")
 
 	// セッションから状態を取得
-	session, _ := h.sessionStore.Get(r, sessionName)
-	savedState, ok := session.Values[oauthStateKey].(string)
+	sess, _ := h.sessionStore.Get(r, sessionName)
+	savedState, ok := sess.GetString(oauthStateKey)
 	if !ok || savedState == "" {
 		h.logger.WarnContext(ctx, "state not found in session")
 		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
@@ -139,19 +139,19 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	// セッションにユーザー情報を保存
 	sessionInfo := h.authUsecase.CreateSession(user, time.Duration(sessionMaxAge)*time.Second)
-	session.Values[sessionKeyUserID] = sessionInfo.UserID
-	session.Values[sessionKeyEmail] = sessionInfo.Email
-	session.Values[sessionKeyName] = sessionInfo.Name
-	session.Values[sessionKeyPicture] = sessionInfo.Picture
-	session.Values[sessionKeyExpiresAt] = sessionInfo.ExpiresAt.Unix()
-	delete(session.Values, oauthStateKey)
+	sess.Set(sessionKeyUserID, sessionInfo.UserID)
+	sess.Set(sessionKeyEmail, sessionInfo.Email)
+	sess.Set(sessionKeyName, sessionInfo.Name)
+	sess.Set(sessionKeyPicture, sessionInfo.Picture)
+	sess.Set(sessionKeyExpiresAt, sessionInfo.ExpiresAt.Unix())
+	sess.Delete(oauthStateKey)
 
-	session.Options.MaxAge = sessionMaxAge
-	session.Options.HttpOnly = true
-	session.Options.Secure = true // HTTPS環境では必須
-	session.Options.SameSite = http.SameSiteLaxMode
+	sess.Options.MaxAge = sessionMaxAge
+	sess.Options.HttpOnly = true
+	sess.Options.Secure = false // 開発環境ではfalse、本番環境ではtrue
+	sess.Options.SameSite = http.SameSiteLaxMode
 
-	if err := session.Save(r, w); err != nil {
+	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
 		http.Redirect(w, r, h.frontendURL+"?error=session_failed", http.StatusTemporaryRedirect)
 		return
@@ -169,8 +169,8 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	h.logger.InfoContext(ctx, "handling github oauth callback")
 
 	// セッションから状態を取得
-	session, _ := h.sessionStore.Get(r, sessionName)
-	savedState, ok := session.Values[oauthStateKey].(string)
+	sess, _ := h.sessionStore.Get(r, sessionName)
+	savedState, ok := sess.GetString(oauthStateKey)
 	if !ok || savedState == "" {
 		h.logger.WarnContext(ctx, "state not found in session")
 		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
@@ -203,19 +203,19 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 
 	// セッションにユーザー情報を保存
 	sessionInfo := h.authUsecase.CreateSession(user, time.Duration(sessionMaxAge)*time.Second)
-	session.Values[sessionKeyUserID] = sessionInfo.UserID
-	session.Values[sessionKeyEmail] = sessionInfo.Email
-	session.Values[sessionKeyName] = sessionInfo.Name
-	session.Values[sessionKeyPicture] = sessionInfo.Picture
-	session.Values[sessionKeyExpiresAt] = sessionInfo.ExpiresAt.Unix()
-	delete(session.Values, oauthStateKey)
+	sess.Set(sessionKeyUserID, sessionInfo.UserID)
+	sess.Set(sessionKeyEmail, sessionInfo.Email)
+	sess.Set(sessionKeyName, sessionInfo.Name)
+	sess.Set(sessionKeyPicture, sessionInfo.Picture)
+	sess.Set(sessionKeyExpiresAt, sessionInfo.ExpiresAt.Unix())
+	sess.Delete(oauthStateKey)
 
-	session.Options.MaxAge = sessionMaxAge
-	session.Options.HttpOnly = true
-	session.Options.Secure = true // HTTPS環境では必須
-	session.Options.SameSite = http.SameSiteLaxMode
+	sess.Options.MaxAge = sessionMaxAge
+	sess.Options.HttpOnly = true
+	sess.Options.Secure = false // 開発環境ではfalse、本番環境ではtrue
+	sess.Options.SameSite = http.SameSiteLaxMode
 
-	if err := session.Save(r, w); err != nil {
+	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
 		http.Redirect(w, r, h.frontendURL+"?error=session_failed", http.StatusTemporaryRedirect)
 		return
@@ -233,14 +233,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	h.logger.InfoContext(ctx, "logging out user")
 
 	// セッションを削除
-	session, _ := h.sessionStore.Get(r, sessionName)
-	session.Options.MaxAge = -1
-	if err := session.Save(r, w); err != nil {
-		h.logger.ErrorContext(ctx, "failed to delete session", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	h.sessionStore.Delete(w, sessionName)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"message": "logged out successfully"}); err != nil {
 		h.logger.ErrorContext(ctx, "failed to encode response", "error", err)
@@ -252,8 +247,8 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// セッションからユーザー情報を取得
-	session, _ := h.sessionStore.Get(r, sessionName)
-	userID, ok := session.Values[sessionKeyUserID].(string)
+	sess, _ := h.sessionStore.Get(r, sessionName)
+	userID, ok := sess.GetString(sessionKeyUserID)
 	if !ok || userID == "" {
 		h.logger.InfoContext(ctx, "user not authenticated")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -261,11 +256,9 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// セッション有効期限を確認
-	expiresAt, ok := session.Values[sessionKeyExpiresAt].(int64)
-	if !ok || time.Now().Unix() > expiresAt {
+	if sess.IsExpired(sessionKeyExpiresAt) {
 		h.logger.InfoContext(ctx, "session expired", "user_id", userID)
-		session.Options.MaxAge = -1
-		session.Save(r, w)
+		h.sessionStore.Delete(w, sessionName)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -292,24 +285,24 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionFromRequest はリクエストからセッション情報を取得する
 func (h *AuthHandler) GetSessionFromRequest(r *http.Request) (*model.Session, error) {
-	session, err := h.sessionStore.Get(r, sessionName)
+	sess, err := h.sessionStore.Get(r, sessionName)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, ok := session.Values[sessionKeyUserID].(string)
+	userID, ok := sess.GetString(sessionKeyUserID)
 	if !ok || userID == "" {
 		return nil, nil
 	}
 
-	expiresAt, ok := session.Values[sessionKeyExpiresAt].(int64)
-	if !ok || time.Now().Unix() > expiresAt {
+	if sess.IsExpired(sessionKeyExpiresAt) {
 		return nil, nil
 	}
 
-	email, _ := session.Values[sessionKeyEmail].(string)
-	name, _ := session.Values[sessionKeyName].(string)
-	picture, _ := session.Values[sessionKeyPicture].(string)
+	email, _ := sess.GetString(sessionKeyEmail)
+	name, _ := sess.GetString(sessionKeyName)
+	picture, _ := sess.GetString(sessionKeyPicture)
+	expiresAt, _ := sess.GetInt64(sessionKeyExpiresAt)
 
 	return &model.Session{
 		UserID:    userID,

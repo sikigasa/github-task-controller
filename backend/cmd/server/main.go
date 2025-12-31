@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/sessions"
 	"github.com/sikigasa/github-task-controller/backend/cmd/config"
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/auth"
 	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/persistence"
+	"github.com/sikigasa/github-task-controller/backend/internal/infrastructure/session"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/handler"
 	"github.com/sikigasa/github-task-controller/backend/internal/interface/middleware"
 	"github.com/sikigasa/github-task-controller/backend/internal/router"
@@ -60,14 +60,7 @@ func run() int {
 	}
 
 	// セッションストアの初期化
-	sessionStore := sessions.NewCookieStore([]byte(config.Config.Session.Secret))
-	sessionStore.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   60 * 60 * 24 * 7, // 7日間
-		HttpOnly: true,
-		Secure:   false, // 本番環境ではtrueに設定
-		SameSite: http.SameSiteLaxMode,
-	}
+	sessionStore := session.NewCookieStore([]byte(config.Config.Session.Secret))
 
 	// データベース接続
 	db, err := persistence.NewDB(ctx, dbConfig, logger)

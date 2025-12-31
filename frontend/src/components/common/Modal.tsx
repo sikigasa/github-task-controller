@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useRef, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ModalProps {
   isOpen: boolean;
@@ -29,16 +29,17 @@ export const Modal: React.FC<ModalProps> = ({
     previousActiveElement.current = document.activeElement as HTMLElement;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
         return;
       }
 
       // フォーカストラップ
-      if (e.key === 'Tab' && modalRef.current) {
-        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+      if (e.key === "Tab" && modalRef.current) {
+        const focusableElements =
+          modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -52,14 +53,16 @@ export const Modal: React.FC<ModalProps> = ({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     // 初期フォーカス
-    const firstInput = modalRef.current?.querySelector<HTMLElement>('input, textarea, select');
+    const firstInput = modalRef.current?.querySelector<HTMLElement>(
+      "input, textarea, select"
+    );
     firstInput?.focus();
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
       previousActiveElement.current?.focus();
     };
   }, [isOpen, onClose]);
@@ -102,9 +105,7 @@ export const Modal: React.FC<ModalProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
 
         {footer && (
           <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-3">

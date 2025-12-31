@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Folder, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Modal } from '@/components/common/Modal';
-import { Button } from '@/components/common/Button';
-import { useProjects } from '@/contexts';
-import { PRIORITIES, PRIORITY_COLORS } from '@/constants';
-import type { TaskFormData, Priority } from '@/types';
+import { useState, useEffect } from "react";
+import { Calendar as CalendarIcon, Folder, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Modal } from "@/components/common/Modal";
+import { Button } from "@/components/common/Button";
+import { useProjects } from "@/contexts";
+import { PRIORITIES, PRIORITY_COLORS } from "@/constants";
+import type { TaskFormData, Priority } from "@/types";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -18,22 +18,22 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  defaultProject = 'Task Controller',
+  defaultProject = "Task Controller",
 }) => {
   const { projects } = useProjects();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [due, setDue] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [due, setDue] = useState("");
   const [project, setProject] = useState(defaultProject);
-  const [priority, setPriority] = useState<Priority>('Medium');
+  const [priority, setPriority] = useState<Priority>("Medium");
 
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
-      setDescription('');
-      setDue('');
+      setTitle("");
+      setDescription("");
+      setDue("");
       setProject(defaultProject);
-      setPriority('Medium');
+      setPriority("Medium");
     }
   }, [isOpen, defaultProject]);
 
@@ -46,13 +46,20 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   const footer = (
     <>
-      <Button variant="ghost" onClick={onClose}>Cancel</Button>
+      <Button variant="ghost" onClick={onClose}>
+        Cancel
+      </Button>
       <Button onClick={handleSubmit}>Create Task</Button>
     </>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Task" footer={footer}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Task"
+      footer={footer}
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="task-title" className="text-sm font-medium">
@@ -69,7 +76,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="task-desc" className="text-sm font-medium">Description</label>
+          <label htmlFor="task-desc" className="text-sm font-medium">
+            Description
+          </label>
           <textarea
             id="task-desc"
             value={description}
@@ -80,7 +89,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label htmlFor="task-project" className="text-sm font-medium flex items-center gap-2">
+            <label
+              htmlFor="task-project"
+              className="text-sm font-medium flex items-center gap-2"
+            >
               <Folder className="w-4 h-4 text-muted-foreground" /> Project
             </label>
             <select
@@ -89,12 +101,20 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               onChange={(e) => setProject(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             >
-              {projects.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              {projects.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label htmlFor="task-due" className="text-sm font-medium flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-muted-foreground" /> Due Date
+            <label
+              htmlFor="task-due"
+              className="text-sm font-medium flex items-center gap-2"
+            >
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" /> Due
+              Date
             </label>
             <input
               id="task-due"

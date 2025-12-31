@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Check, CheckCircle2, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { TASK_STATUSES } from '@/constants';
-import type { UseTaskFiltersReturn } from '@/hooks';
+import React, { useState } from "react";
+import {
+  Calendar as CalendarIcon,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TASK_STATUSES } from "@/constants";
+import type { UseTaskFiltersReturn } from "@/hooks";
 
 interface TaskFilterToolbarProps {
   filters: UseTaskFiltersReturn;
 }
 
-export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({ filters }) => {
+export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({
+  filters,
+}) => {
   const {
     statusFilter,
     setStatusFilter,
@@ -35,25 +42,36 @@ export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({ filters })
             className="bg-background border border-border text-sm rounded-md px-3 py-1.5 focus:ring-1 focus:ring-primary outline-none flex items-center justify-between min-w-[120px] hover:bg-muted/50"
           >
             <span className="truncate max-w-[100px]">
-              {statusFilter.length === 0 ? "All Status" : statusFilter.join(', ')}
+              {statusFilter.length === 0
+                ? "All Status"
+                : statusFilter.join(", ")}
             </span>
             <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
           </button>
           {isStatusDropdownOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsStatusDropdownOpen(false)} />
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsStatusDropdownOpen(false)}
+              />
               <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-border shadow-lg rounded-md z-50 py-1 animate-in zoom-in-95 duration-100">
-                {TASK_STATUSES.map(s => (
+                {TASK_STATUSES.map((s) => (
                   <div
                     key={s.id}
                     className="flex items-center px-4 py-2 hover:bg-muted cursor-pointer transition-colors"
                     onClick={() => toggleStatusFilter(s.id)}
                   >
-                    <div className={cn(
-                      "w-4 h-4 border rounded mr-2 flex items-center justify-center transition-colors",
-                      statusFilter.includes(s.id) ? "bg-primary border-primary" : "border-muted-foreground"
-                    )}>
-                      {statusFilter.includes(s.id) && <Check className="w-3 h-3 text-primary-foreground" />}
+                    <div
+                      className={cn(
+                        "w-4 h-4 border rounded mr-2 flex items-center justify-center transition-colors",
+                        statusFilter.includes(s.id)
+                          ? "bg-primary border-primary"
+                          : "border-muted-foreground"
+                      )}
+                    >
+                      {statusFilter.includes(s.id) && (
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      )}
                     </div>
                     <span className="text-sm">{s.title}</span>
                   </div>
@@ -94,8 +112,8 @@ export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({ filters })
             type="text"
             placeholder="yyyy/mm/dd"
             className="text-sm bg-transparent outline-none w-[90px] placeholder:text-muted-foreground/50 font-mono"
-            value={startDate.replace(/-/g, '/')}
-            onChange={(e) => setStartDate(e.target.value.replace(/\//g, '-'))}
+            value={startDate.replace(/-/g, "/")}
+            onChange={(e) => setStartDate(e.target.value.replace(/\//g, "-"))}
           />
           <div className="relative">
             <CalendarIcon className="w-4 h-4 text-muted-foreground cursor-pointer group-hover:text-primary transition-colors" />
@@ -113,8 +131,8 @@ export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({ filters })
             type="text"
             placeholder="yyyy/mm/dd"
             className="text-sm bg-transparent outline-none w-[90px] placeholder:text-muted-foreground/50 font-mono"
-            value={endDate.replace(/-/g, '/')}
-            onChange={(e) => setEndDate(e.target.value.replace(/\//g, '-'))}
+            value={endDate.replace(/-/g, "/")}
+            onChange={(e) => setEndDate(e.target.value.replace(/\//g, "-"))}
           />
           <div className="relative">
             <CalendarIcon className="w-4 h-4 text-muted-foreground cursor-pointer group-hover:text-primary transition-colors" />
@@ -139,7 +157,11 @@ export const TaskFilterToolbar: React.FC<TaskFilterToolbarProps> = ({ filters })
               : "bg-card border-border text-muted-foreground hover:text-foreground"
           )}
         >
-          {showCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-current" />}
+          {showCompleted ? (
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          ) : (
+            <div className="w-3.5 h-3.5 rounded-full border border-current" />
+          )}
           {showCompleted ? "Hide Completed" : "Show Completed"}
         </button>
       </div>

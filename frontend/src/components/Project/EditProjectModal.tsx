@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Modal } from '@/components/common/Modal';
-import { Button } from '@/components/common/Button';
-import { PROJECT_COLORS } from '@/constants';
-import type { Project, ProjectFormData } from '@/types';
+import { useState, useEffect } from "react";
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Modal } from "@/components/common/Modal";
+import { Button } from "@/components/common/Button";
+import { PROJECT_COLORS } from "@/constants";
+import type { Project, ProjectFormData } from "@/types";
 
 interface EditProjectModalProps {
   isOpen: boolean;
@@ -21,8 +21,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   onDelete,
   project,
 }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [color, setColor] = useState<string>(PROJECT_COLORS[0].value);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -30,7 +30,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   useEffect(() => {
     if (isOpen && project) {
       setTitle(project.name);
-      setDescription(project.description || '');
+      setDescription(project.description || "");
       setColor(project.color || PROJECT_COLORS[0].value);
       setShowDeleteConfirm(false);
     }
@@ -63,7 +63,9 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         Delete
       </Button>
       <div className="flex gap-3">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
         <Button onClick={handleSubmit}>Save Changes</Button>
       </div>
     </div>
@@ -71,9 +73,15 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
   const deleteConfirmFooter = (
     <div className="flex gap-3">
-      <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
-      <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-        {isDeleting ? 'Deleting...' : 'Delete Project'}
+      <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>
+        Cancel
+      </Button>
+      <Button
+        variant="destructive"
+        onClick={handleDelete}
+        disabled={isDeleting}
+      >
+        {isDeleting ? "Deleting..." : "Delete Project"}
       </Button>
     </div>
   );
@@ -88,10 +96,15 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete <span className="font-semibold text-foreground">{project?.name}</span>?
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-foreground">
+              {project?.name}
+            </span>
+            ?
           </p>
           <p className="text-sm text-destructive">
-            This action cannot be undone. All tasks in this project will also be deleted.
+            This action cannot be undone. All tasks in this project will also be
+            deleted.
           </p>
         </div>
       </Modal>
@@ -99,7 +112,12 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Project" footer={footer}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Project"
+      footer={footer}
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="edit-project-title" className="text-sm font-medium">
@@ -117,7 +135,10 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="edit-project-description" className="text-sm font-medium">
+          <label
+            htmlFor="edit-project-description"
+            className="text-sm font-medium"
+          >
             Description
           </label>
           <textarea
@@ -144,7 +165,12 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
                     : "border-border hover:bg-muted bg-background"
                 )}
               >
-                <span className={cn("w-3 h-3 rounded-full", c.value.split(' ')[0].replace('text-', 'bg-'))} />
+                <span
+                  className={cn(
+                    "w-3 h-3 rounded-full",
+                    c.value.split(" ")[0].replace("text-", "bg-")
+                  )}
+                />
                 {c.name}
               </button>
             ))}

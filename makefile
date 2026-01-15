@@ -47,3 +47,7 @@ migrateversion:
 goupdate:
 	go get -t -u ./...
 	go mod tidy
+
+pnpm-i:
+	cd ./frontend && pnpm install
+	cd ../

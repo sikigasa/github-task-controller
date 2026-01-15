@@ -17,6 +17,7 @@ export function GitHubSettings() {
       const data = await githubApi.getConnectionStatus();
       setStatus(data);
     } catch (err) {
+      console.error("Failed to fetch GitHub connection status:", err);
       setError("GitHub連携状態の取得に失敗しました");
     } finally {
       setIsLoading(false);
@@ -32,6 +33,7 @@ export function GitHubSettings() {
       setPat("");
       await fetchStatus();
     } catch (err) {
+      console.error("Failed to save PAT:", err);
       setError("PATの保存に失敗しました");
     } finally {
       setIsSaving(false);
@@ -45,6 +47,7 @@ export function GitHubSettings() {
       await githubApi.deletePAT();
       await fetchStatus();
     } catch (err) {
+      console.error("Failed to delete PAT:", err);
       setError("PATの削除に失敗しました");
     } finally {
       setIsSaving(false);

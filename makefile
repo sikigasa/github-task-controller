@@ -1,4 +1,4 @@
-.PHONY: genswag genproto run gomigrate migrateup migratedown migrateforce migrateversion goupdate
+.PHONY: genswag genproto run gomigrate migrateup migratedown migrateforce migrateversion goupdate gobuild
 
 # DB接続設定（環境変数で上書き可能）
 DB_HOST ?= localhost
@@ -47,6 +47,9 @@ migrateversion:
 goupdate:
 	go get -t -u ./...
 	go mod tidy
+
+gobuild:
+	cd backend && go build -o ../bin/server ./cmd/server
 
 pnpm-i:
 	cd ./frontend && pnpm install

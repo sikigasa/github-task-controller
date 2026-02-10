@@ -109,7 +109,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	savedState, ok := sess.GetString(oauthStateKey)
 	if !ok || savedState == "" {
 		h.logger.WarnContext(ctx, "state not found in session")
-		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=invalid_state", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if state != savedState {
 		h.logger.WarnContext(ctx, "state mismatch", "expected", savedState, "got", state)
-		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=invalid_state", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		h.logger.WarnContext(ctx, "code not found in query")
-		http.Redirect(w, r, h.frontendURL+"?error=no_code", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=no_code", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	user, _, err := h.authUsecase.HandleCallback(ctx, "google", code)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
-		http.Redirect(w, r, h.frontendURL+"?error=auth_failed", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
-		http.Redirect(w, r, h.frontendURL+"?error=session_failed", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=session_failed", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -177,7 +177,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	savedState, ok := sess.GetString(oauthStateKey)
 	if !ok || savedState == "" {
 		h.logger.WarnContext(ctx, "state not found in session")
-		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=invalid_state", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if state != savedState {
 		h.logger.WarnContext(ctx, "state mismatch", "expected", savedState, "got", state)
-		http.Redirect(w, r, h.frontendURL+"?error=invalid_state", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=invalid_state", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		h.logger.WarnContext(ctx, "code not found in query")
-		http.Redirect(w, r, h.frontendURL+"?error=no_code", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=no_code", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -201,7 +201,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	user, _, err := h.authUsecase.HandleCallback(ctx, "github", code)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
-		http.Redirect(w, r, h.frontendURL+"?error=auth_failed", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
-		http.Redirect(w, r, h.frontendURL+"?error=session_failed", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=session_failed", http.StatusTemporaryRedirect)
 		return
 	}
 

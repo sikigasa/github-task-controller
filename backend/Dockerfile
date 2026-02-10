@@ -12,12 +12,13 @@ RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
+# ソースコードをコピー
+COPY . .
+
 # 依存関係のインストール（go.modが存在する場合）
-COPY go.* ./
 RUN if [ -f go.mod ]; then go mod download; fi
 
-# ソースコードをコピーしてビルド
-COPY . .
+# ビルド
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/server
 
 # -----------------------------------------------------------------------------

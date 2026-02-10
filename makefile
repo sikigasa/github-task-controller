@@ -54,3 +54,4 @@ gobuild:
 pnpm-i:
 	cd ./frontend && pnpm install
 	cd ../
+	

@@ -12,9 +12,9 @@ RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
-# 依存関係のインストール（キャッシュ効率化のため先にgo.mod/go.sumをコピー）
-COPY go.mod go.sum* ./
-RUN go mod download
+# 依存関係のインストール（go.modが存在する場合）
+COPY go.* ./
+RUN if [ -f go.mod ]; then go mod download; fi
 
 # ソースコードをコピーしてビルド
 COPY . .

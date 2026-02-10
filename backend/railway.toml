@@ -4,6 +4,8 @@
 [build]
 # Dockerfileを使用してビルド
 dockerfilePath = "Dockerfile"
+# バックエンドディレクトリをビルドコンテキストとして使用
+watchPatterns = ["**"]
 
 [deploy]
 # ヘルスチェックのパス（必要に応じて設定）

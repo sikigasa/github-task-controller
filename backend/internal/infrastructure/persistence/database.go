@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"net/url"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -18,6 +20,45 @@ type DBConfig struct {
 	Password string
 	DBName   string
 	SSLMode  string
+}
+
+// ParseDatabaseURL はDATABASE_URL形式の接続文字列をDBConfigにパースする
+// 形式: postgresql://user:password@host:port/dbname?sslmode=require
+func ParseDatabaseURL(databaseURL string) (*DBConfig, error) {
+	u, err := url.Parse(databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse DATABASE_URL: %w", err)
+	}
+
+	if u.Scheme != "postgres" && u.Scheme != "postgresql" {
+		return nil, fmt.Errorf("invalid DATABASE_URL scheme: %s", u.Scheme)
+	}
+
+	password, _ := u.User.Password()
+
+	// ポートのデフォルト値
+	port := u.Port()
+	if port == "" {
+		port = "5432"
+	}
+
+	// SSLモードのデフォルト値
+	sslMode := u.Query().Get("sslmode")
+	if sslMode == "" {
+		sslMode = "require" // Railway等のクラウドサービスではrequireがデフォルト
+	}
+
+	// データベース名（先頭の/を除去）
+	dbName := strings.TrimPrefix(u.Path, "/")
+
+	return &DBConfig{
+		Host:     u.Hostname(),
+		Port:     port,
+		User:     u.User.Username(),
+		Password: password,
+		DBName:   dbName,
+		SSLMode:  sslMode,
+	}, nil
 }
 
 // NewDB は新しいデータベース接続を作成する

@@ -9,6 +9,9 @@ type config struct {
 	}
 
 	Database struct {
+		// DATABASE_URL（Railway等で使用する一括設定）
+		// 例: postgresql://user:password@host:port/dbname?sslmode=require
+		URL      string `env:"DATABASE_URL"`
 		Host     string `env:"DB_HOST" envDefault:"localhost"`
 		Port     string `env:"DB_PORT" envDefault:"5432"`
 		User     string `env:"DB_USER" envDefault:"postgres"`

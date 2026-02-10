@@ -51,13 +51,25 @@ func run() int {
 	}
 
 	// データベース設定
-	dbConfig := persistence.DBConfig{
-		Host:     config.Config.Database.Host,
-		Port:     config.Config.Database.Port,
-		User:     config.Config.Database.User,
-		Password: config.Config.Database.Password,
-		DBName:   config.Config.Database.Name,
-		SSLMode:  config.Config.Database.SSLMode,
+	// DATABASE_URLが設定されている場合はそれを使用（Railway等のクラウドサービス用）
+	var dbConfig persistence.DBConfig
+	if config.Config.Database.URL != "" {
+		logger.Info("using DATABASE_URL for database connection")
+		parsedConfig, err := persistence.ParseDatabaseURL(config.Config.Database.URL)
+		if err != nil {
+			logger.Error("failed to parse DATABASE_URL", "error", err)
+			return 1
+		}
+		dbConfig = *parsedConfig
+	} else {
+		dbConfig = persistence.DBConfig{
+			Host:     config.Config.Database.Host,
+			Port:     config.Config.Database.Port,
+			User:     config.Config.Database.User,
+			Password: config.Config.Database.Password,
+			DBName:   config.Config.Database.Name,
+			SSLMode:  config.Config.Database.SSLMode,
+		}
 	}
 
 	// セッションストアの初期化

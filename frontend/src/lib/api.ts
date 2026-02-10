@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// 本番環境ではVercelプロキシ経由（同一ドメイン）、ローカルではバックエンドに直接接続
+// プロキシ設定: vercel.json の rewrites で /api/* と /auth/* を Railway にプロキシ
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // yyyy-MM-dd形式をRFC3339形式に変換
 const toRFC3339 = (dateStr: string | undefined): string | undefined => {

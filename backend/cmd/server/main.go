@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -74,6 +75,10 @@ func run() int {
 
 	// セッションストアの初期化
 	sessionStore := session.NewCookieStore([]byte(config.Config.Session.Secret))
+	// HTTPS環境（本番）ではSecure=true, SameSite=Noneに設定
+	if strings.HasPrefix(config.Config.App.FrontendURL, "https://") {
+		sessionStore.Secure = true
+	}
 
 	// データベース接続
 	db, err := persistence.NewDB(ctx, dbConfig, logger)

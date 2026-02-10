@@ -53,6 +53,11 @@ func NewCookieStore(secret []byte) *CookieStore {
 
 // Get はリクエストからセッションを取得する
 func (s *CookieStore) Get(r *http.Request, name string) (*Session, error) {
+	sameSite := http.SameSiteLaxMode
+	if s.Secure {
+		sameSite = http.SameSiteNoneMode
+	}
+
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		// Cookieが存在しない場合は新しいセッションを返す
@@ -62,8 +67,8 @@ func (s *CookieStore) Get(r *http.Request, name string) (*Session, error) {
 				Path:     "/",
 				MaxAge:   60 * 60 * 24 * 7,
 				HttpOnly: true,
-				Secure:   false,
-				SameSite: http.SameSiteLaxMode,
+				Secure:   s.Secure,
+				SameSite: sameSite,
 			},
 		}, nil
 	}
@@ -78,8 +83,8 @@ func (s *CookieStore) Get(r *http.Request, name string) (*Session, error) {
 				Path:     "/",
 				MaxAge:   60 * 60 * 24 * 7,
 				HttpOnly: true,
-				Secure:   false,
-				SameSite: http.SameSiteLaxMode,
+				Secure:   s.Secure,
+				SameSite: sameSite,
 			},
 		}, nil
 	}
@@ -171,7 +176,7 @@ func (s *CookieStore) decode(value string) (*Session, error) {
 			Path:     "/",
 			MaxAge:   60 * 60 * 24 * 7,
 			HttpOnly: true,
-			Secure:   false,
+			Secure:   s.Secure,
 			SameSite: http.SameSiteLaxMode,
 		},
 	}, nil

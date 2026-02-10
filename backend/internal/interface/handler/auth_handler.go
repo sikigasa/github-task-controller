@@ -149,7 +149,11 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	sess.Options.MaxAge = sessionMaxAge
 	sess.Options.HttpOnly = true
 	sess.Options.Secure = isHTTPS(r)
-	sess.Options.SameSite = http.SameSiteLaxMode
+	if isHTTPS(r) {
+		sess.Options.SameSite = http.SameSiteNoneMode
+	} else {
+		sess.Options.SameSite = http.SameSiteLaxMode
+	}
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)
@@ -213,7 +217,11 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	sess.Options.MaxAge = sessionMaxAge
 	sess.Options.HttpOnly = true
 	sess.Options.Secure = isHTTPS(r)
-	sess.Options.SameSite = http.SameSiteLaxMode
+	if isHTTPS(r) {
+		sess.Options.SameSite = http.SameSiteNoneMode
+	} else {
+		sess.Options.SameSite = http.SameSiteLaxMode
+	}
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
 		h.logger.ErrorContext(ctx, "failed to save session", "error", err)

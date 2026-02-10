@@ -148,7 +148,7 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	sess.Options.MaxAge = sessionMaxAge
 	sess.Options.HttpOnly = true
-	sess.Options.Secure = false // ローカル開発環境ではfalse、本番ではtrue
+	sess.Options.Secure = isHTTPS(r)
 	sess.Options.SameSite = http.SameSiteLaxMode
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
@@ -212,7 +212,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 
 	sess.Options.MaxAge = sessionMaxAge
 	sess.Options.HttpOnly = true
-	sess.Options.Secure = false // ローカル開発環境ではfalse、本番ではtrue
+	sess.Options.Secure = isHTTPS(r)
 	sess.Options.SameSite = http.SameSiteLaxMode
 
 	if err := h.sessionStore.Save(w, r, sessionName, sess); err != nil {
@@ -311,4 +311,13 @@ func (h *AuthHandler) GetSessionFromRequest(r *http.Request) (*model.Session, er
 		Picture:   picture,
 		ExpiresAt: time.Unix(expiresAt, 0),
 	}, nil
+}
+
+// isHTTPS はリクエストがHTTPS経由かどうかを判定する
+// プロキシ（Railway等）の場合はX-Forwarded-Protoヘッダーも確認する
+func isHTTPS(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+	return r.Header.Get("X-Forwarded-Proto") == "https"
 }

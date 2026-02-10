@@ -127,7 +127,7 @@ func run() int {
 	authMiddleware := middleware.NewAuthMiddleware(sessionStore, logger)
 
 	// ルーターのセットアップ
-	r := router.NewRouter(todoHandler, projectHandler, taskHandler, authHandler, githubHandler, authMiddleware, logger)
+	r := router.NewRouter(todoHandler, projectHandler, taskHandler, authHandler, githubHandler, authMiddleware, config.Config.App.FrontendURL, logger)
 	httpHandler := r.Setup()
 
 	// サーバーの設定

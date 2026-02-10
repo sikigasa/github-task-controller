@@ -25,6 +25,7 @@ type Router struct {
 	authMiddleware *middleware.AuthMiddleware
 	logger         *slog.Logger
 	staticDir      string
+	frontendURL    string
 }
 
 // NewRouter は新しいRouterを作成する
@@ -35,6 +36,7 @@ func NewRouter(
 	authHandler *handler.AuthHandler,
 	githubHandler *handler.GithubHandler,
 	authMiddleware *middleware.AuthMiddleware,
+	frontendURL string,
 	logger *slog.Logger,
 ) *Router {
 	// 静的ファイルディレクトリ（環境変数で設定可能）
@@ -53,6 +55,7 @@ func NewRouter(
 		authMiddleware: authMiddleware,
 		logger:         logger,
 		staticDir:      staticDir,
+		frontendURL:    frontendURL,
 	}
 }
 
@@ -108,8 +111,12 @@ func (r *Router) Setup() http.Handler {
 
 	// CORS設定
 	// credentials: 'include' を使用する場合、AllowedOrigins に "*" は使用不可
+	allowedOrigins := []string{"http://localhost:5173", "http://127.0.0.1:5173"}
+	if r.frontendURL != "" && r.frontendURL != "http://localhost:5173" {
+		allowedOrigins = append(allowedOrigins, r.frontendURL)
+	}
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "Cookie"},
 		ExposedHeaders:   []string{"Content-Length", "Set-Cookie"},

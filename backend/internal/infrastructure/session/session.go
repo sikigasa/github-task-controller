@@ -40,12 +40,14 @@ type Options struct {
 // CookieStore は署名付きCookieベースのセッションストア
 type CookieStore struct {
 	secret []byte
+	Secure bool // 本番環境ではtrueに設定
 }
 
 // NewCookieStore は新しいCookieStoreを作成する
 func NewCookieStore(secret []byte) *CookieStore {
 	return &CookieStore{
 		secret: secret,
+		Secure: false,
 	}
 }
 

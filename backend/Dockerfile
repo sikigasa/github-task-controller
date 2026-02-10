@@ -19,7 +19,10 @@ COPY . .
 RUN if [ -f go.mod ]; then go mod download; fi
 
 # ビルド
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/server
+RUN if [ -f go.mod ]; then \
+      CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+      go build -ldflags="-w -s" -o /app/server ./cmd/server; \
+    fi
 
 # -----------------------------------------------------------------------------
 # Stage 2: 本番用イメージ

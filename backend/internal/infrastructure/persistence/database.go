@@ -164,6 +164,18 @@ func InitSchema(ctx context.Context, db *sql.DB, logger *slog.Logger) error {
 		CREATE INDEX IF NOT EXISTS idx_project_user_id ON project(user_id);
 		CREATE INDEX IF NOT EXISTS idx_task_project_id ON task(project_id);
 		CREATE INDEX IF NOT EXISTS idx_task_status ON task(status);
+
+		-- マイグレーション: タスク優先度
+		ALTER TABLE task ADD COLUMN IF NOT EXISTS priority INT NOT NULL DEFAULT 0;
+
+		-- マイグレーション: GitHub連携カラム
+		ALTER TABLE github_account ADD COLUMN IF NOT EXISTS pat_encrypted VARCHAR;
+		ALTER TABLE project ADD COLUMN IF NOT EXISTS github_owner VARCHAR;
+		ALTER TABLE project ADD COLUMN IF NOT EXISTS github_repo VARCHAR;
+		ALTER TABLE project ADD COLUMN IF NOT EXISTS github_project_number INT;
+		ALTER TABLE task ADD COLUMN IF NOT EXISTS github_item_id VARCHAR;
+		ALTER TABLE task ADD COLUMN IF NOT EXISTS github_issue_number INT;
+		ALTER TABLE task ADD COLUMN IF NOT EXISTS github_issue_url VARCHAR;
 	`
 
 	_, err := db.ExecContext(ctx, schema)

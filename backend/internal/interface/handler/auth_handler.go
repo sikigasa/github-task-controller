@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/sikigasa/github-task-controller/backend/internal/application/usecase"
@@ -132,8 +133,8 @@ func (h *AuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	// コールバックを処理してユーザー情報を取得
 	user, _, err := h.authUsecase.HandleCallback(ctx, "google", code)
 	if err != nil {
-		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
-		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed", http.StatusTemporaryRedirect)
+		h.logger.ErrorContext(ctx, "failed to handle google callback", "error", err)
+		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed&detail="+url.QueryEscape(err.Error()), http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -201,7 +202,7 @@ func (h *AuthHandler) CallbackGithub(w http.ResponseWriter, r *http.Request) {
 	user, _, err := h.authUsecase.HandleCallback(ctx, "github", code)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "failed to handle callback", "error", err)
-		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, h.frontendURL+"/login?error=auth_failed&detail="+url.QueryEscape(err.Error()), http.StatusTemporaryRedirect)
 		return
 	}
 

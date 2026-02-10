@@ -13,6 +13,7 @@ export const Login: React.FC = () => {
   const { loginWithGoogle, loginWithGithub } = useAuth();
   const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
+  const detail = searchParams.get("detail");
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#020817] relative overflow-hidden text-slate-200 selection:bg-blue-500/30">
@@ -57,9 +58,16 @@ export const Login: React.FC = () => {
           {error && (
             <div className="w-full bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-red-300 text-sm">
-                {errorMessages[error] || `認証エラー: ${error}`}
-              </p>
+              <div>
+                <p className="text-red-300 text-sm">
+                  {errorMessages[error] || `認証エラー: ${error}`}
+                </p>
+                {detail && (
+                  <p className="text-red-400/70 text-xs mt-1 break-all">
+                    詳細: {detail}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

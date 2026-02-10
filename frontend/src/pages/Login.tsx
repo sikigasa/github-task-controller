@@ -1,8 +1,18 @@
-import { Github, Chrome, Command, Sparkles } from "lucide-react";
+import { Github, Chrome, Command, Sparkles, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts";
+import { useSearchParams } from "react-router-dom";
+
+const errorMessages: Record<string, string> = {
+  invalid_state: "認証セッションが無効です。もう一度お試しください。",
+  no_code: "認証コードが取得できませんでした。",
+  auth_failed: "認証に失敗しました。もう一度お試しください。",
+  session_failed: "セッションの保存に失敗しました。",
+};
 
 export const Login: React.FC = () => {
   const { loginWithGoogle, loginWithGithub } = useAuth();
+  const [searchParams] = useSearchParams();
+  const error = searchParams.get("error");
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#020817] relative overflow-hidden text-slate-200 selection:bg-blue-500/30">
@@ -42,6 +52,16 @@ export const Login: React.FC = () => {
               Experience the flow of intelligent task management.
             </p>
           </div>
+
+          {/* OAuth Error Message */}
+          {error && (
+            <div className="w-full bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-300 text-sm">
+                {errorMessages[error] || `認証エラー: ${error}`}
+              </p>
+            </div>
+          )}
 
           {/* Social Login Buttons */}
           <div className="w-full space-y-3 pt-2">

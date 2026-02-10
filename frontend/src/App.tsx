@@ -47,6 +47,11 @@ function AppRoutes() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
+      {/* OAuthコールバック後のリダイレクト先 - エラーパラメータをLoginに転送 */}
+      <Route
+        path="/oauth/error"
+        element={<Navigate to="/login" replace />}
+      />
       <Route
         path="/"
         element={
